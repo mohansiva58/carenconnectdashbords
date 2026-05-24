@@ -7,14 +7,13 @@ import { ApprovalsPanel } from "@/components/Approvals";
 import { LeaveApprovalsPanel } from "@/components/LeaveApprovalsPanel";
 import { WorkflowWorkspace } from "@/components/WorkflowWorkspace";
 import { SalesBoard } from "@/components/dashboards/SalesBoard";
-import { MDOrganizationalChart } from "./MDOrganizationalChart";
 import { StaffOverview } from "./StaffOverview";
 import { ComplaintsPanel } from "./ComplaintsPanel";
 import { ServiceRequestsPanel } from "./ServiceRequestsPanel";
 import { WorkflowSection } from "@/components/layouts/WorkflowSection";
 import { MetricsStrip } from "@/components/layouts/MetricsStrip";
 import { SectionHeader } from "@/components/layouts/SectionHeader";
-import { OverviewTabsContainer } from "@/components/layouts/OverviewTabsContainer";
+import { HorizontalTabsContainer } from "@/components/layouts/HorizontalTabsContainer";
 import { DataTableFilter } from "@/components/filters/DataTableFilter";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { useFilters } from "@/hooks/useFilters";
@@ -61,13 +60,14 @@ export const MDDashboardView = ({
   handleRejectLead: (id: string) => Promise<boolean>;
 }) => {
   const firstName = user?.name?.split(" ")[0] ?? "MD";
-  const [activeOverviewTab, setActiveOverviewTab] = useState('quick-insights');
+  const [activeOverviewTab, setActiveOverviewTab] = useState('dashboard');
   const staffFilters = useFilters();
   const analyticsFilters = useFilters();
+  const regionalFilters = useFilters();
 
   return (
     <>
-      <TabsContent value="overview" className="space-y-6 outline-none mt-0">
+      <TabsContent value="overview" className="outline-none mt-0">
         <RBACPageHeader
           eyebrow="MD RBAC Console"
           title={`Executive workspace, ${firstName}`}
@@ -84,46 +84,47 @@ export const MDDashboardView = ({
           </div>
         </RBACPageHeader>
 
-        {/* Key Metrics */}
-        <MetricsStrip
-          grid={4}
-          metrics={[
-            {
-              label: "Users in Scope",
-              value: dashboardData.staffList?.length || 0,
-              icon: Users,
-              tone: "primary",
-            },
-            {
-              label: "Total Customers",
-              value: dashboardData.kpis.totalCustomers || "0",
-              icon: Database,
-              tone: "success",
-            },
-            {
-              label: "Open Complaints",
-              value: dashboardData.kpis.openComplaints || "0",
-              icon: AlertTriangle,
-              tone: "danger",
-            },
-            {
-              label: "Pending Approvals",
-              value: dashboardData.kpis.pendingApprovals || "0",
-              icon: CheckSquare,
-              tone: "warning",
-            },
-          ]}
-        />
-
-        {/* Nested Overview Tabs */}
-        <OverviewTabsContainer
+        {/* Horizontal Tab Navigation */}
+        <HorizontalTabsContainer
           tabs={[
             {
-              id: 'quick-insights',
-              label: 'Quick Insights',
-              icon: <ShieldCheck className="h-4 w-4" />,
+              id: 'dashboard',
+              label: 'Dashboard',
+              icon: <Activity className="h-4 w-4" />,
               content: (
                 <div className="space-y-6">
+                  {/* Key Metrics */}
+                  <MetricsStrip
+                    grid={4}
+                    metrics={[
+                      {
+                        label: "Users in Scope",
+                        value: dashboardData.staffList?.length || 0,
+                        icon: Users,
+                        tone: "primary",
+                      },
+                      {
+                        label: "Total Customers",
+                        value: dashboardData.kpis.totalCustomers || "0",
+                        icon: Database,
+                        tone: "success",
+                      },
+                      {
+                        label: "Open Complaints",
+                        value: dashboardData.kpis.openComplaints || "0",
+                        icon: AlertTriangle,
+                        tone: "danger",
+                      },
+                      {
+                        label: "Pending Approvals",
+                        value: dashboardData.kpis.pendingApprovals || "0",
+                        icon: CheckSquare,
+                        tone: "warning",
+                      },
+                    ]}
+                  />
+
+                  {/* Governance Scopes */}
                   <PermissionScopeGrid
                     scopes={[
                       {
@@ -147,10 +148,11 @@ export const MDDashboardView = ({
                     ]}
                   />
 
+                  {/* System KPIs */}
                   <RBACSection>
                     <RBACSectionHeader
-                      label="Executive KPIs"
-                      title="System health at a glance"
+                      label="System Health"
+                      title="Executive KPIs"
                       description="The highest-signal counters for current operational risk and throughput."
                       icon={Layers}
                     />
@@ -161,6 +163,77 @@ export const MDDashboardView = ({
                       <KpiCard label="Pending Approvals" value={dashboardData.kpis.pendingApprovals || "0"} icon={CheckSquare} tone="warning" />
                     </div>
                   </RBACSection>
+                </div>
+              ),
+            },
+            {
+              id: 'regional',
+              label: 'Regional Data',
+              icon: <Database className="h-4 w-4" />,
+              content: (
+                <div className="space-y-6">
+                  <DataTableFilter
+                    filters={regionalFilters.filters}
+                    onFiltersChange={regionalFilters.updateFilters}
+                    onReset={regionalFilters.resetFilters}
+                    hasActiveFilters={regionalFilters.hasActiveFilters}
+                    searchPlaceholder="Search regional data..."
+                    showSearch={true}
+                  />
+                  <FilterChips
+                    chips={regionalFilters.filterChips}
+                    onClearAll={regionalFilters.clearAllFilters}
+                  />
+
+                  <div className="space-y-4">
+                    <SectionHeader
+                      subtitle="Regional Performance"
+                      title="Regional Operations Overview"
+                      description="Performance metrics and data across all regions."
+                      icon={BarChart3}
+                      variant="h2"
+                    />
+                    
+                    <WorkflowSection variant="default" className="overflow-hidden">
+                      <div className="grid gap-6 lg:grid-cols-2">
+                        <TrendChart data={dashboardData.trendData} />
+                        <AttendanceTrendChart data={dashboardData.attendanceTrend} />
+                      </div>
+                    </WorkflowSection>
+
+                    <div className="grid gap-6 lg:grid-cols-3">
+                      <WorkflowSection
+                        title="Service Distribution"
+                        icon={PieChart}
+                        variant="default"
+                        className="lg:col-span-1"
+                      >
+                        <DistroPieChart data={dashboardData.distributionData} />
+                      </WorkflowSection>
+
+                      <WorkflowSection
+                        title="Regional Summary"
+                        description="Consolidated metrics across all regions"
+                        icon={Activity}
+                        variant="default"
+                        className="lg:col-span-2"
+                      >
+                        <p className="text-sm leading-6 text-slate-600 mb-4">
+                          Monitor regional performance, resource allocation, and operational capacity across your organization.
+                        </p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Active Regions</p>
+                            <p className="mt-3 text-3xl font-extrabold text-blue-950">5</p>
+                          </div>
+                          <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+                            <p className="text-xs font-bold uppercase tracking-widest text-purple-700">Regional Teams</p>
+                            <p className="mt-3 text-3xl font-extrabold text-purple-950">{dashboardData.staffList?.length || 0}</p>
+                          </div>
+                        </div>
+                      </WorkflowSection>
+                    </div>
+                  </div>
                 </div>
               ),
             },
@@ -183,25 +256,13 @@ export const MDDashboardView = ({
                     chips={staffFilters.filterChips}
                     onClearAll={staffFilters.clearAllFilters}
                   />
-                  
-                  {dashboardData.staffList && (
-                    <RBACSection>
-                      <RBACSectionHeader
-                        label="Organization Map"
-                        title="Live hierarchy and control relationships"
-                        description="Use this area to understand reporting depth before changing permissions or assignments."
-                        icon={Network}
-                      />
-                      <MDOrganizationalChart staff={dashboardData.staffList} />
-                    </RBACSection>
-                  )}
 
                   {dashboardData.staffList && (
                     <RBACSection>
                       <RBACSectionHeader
-                        label="Staff Roster"
-                        title="Staff, roles, and operational status"
-                        description="A roster view for account state, attendance, and role review."
+                        label="Staff Directory"
+                        title="All staff members and operational status"
+                        description="A comprehensive roster view for account state, attendance, and role management."
                         icon={Users}
                       />
                       <StaffOverview staff={dashboardData.staffList} data={dashboardData} viewerRole="md" />
@@ -211,37 +272,21 @@ export const MDDashboardView = ({
               ),
             },
             {
-              id: 'analytics',
-              label: 'Analytics',
+              id: 'reports',
+              label: 'Reports',
               icon: <BarChart className="h-4 w-4" />,
               content: (
                 <div className="space-y-6">
-                  <DataTableFilter
-                    filters={analyticsFilters.filters}
-                    onFiltersChange={analyticsFilters.updateFilters}
-                    onReset={analyticsFilters.resetFilters}
-                    hasActiveFilters={analyticsFilters.hasActiveFilters}
-                    searchPlaceholder="Filter analytics..."
-                    showSearch={true}
-                  />
-                  <FilterChips
-                    chips={analyticsFilters.filterChips}
-                    onClearAll={analyticsFilters.clearAllFilters}
-                  />
-
                   <div className="space-y-4">
                     <SectionHeader
-                      subtitle="Performance Intelligence"
-                      title="Service Movement & Attendance Trends"
-                      description="Review system performance before approving structural or workflow changes."
+                      subtitle="Performance Analytics"
+                      title="System Trends & Analytics"
+                      description="Comprehensive reporting on service movement and operational metrics."
                       icon={TrendingUp}
                       variant="h2"
                     />
                     
-                    <WorkflowSection
-                      variant="default"
-                      className="overflow-hidden"
-                    >
+                    <WorkflowSection variant="default" className="overflow-hidden">
                       <div className="grid gap-6 lg:grid-cols-2">
                         <TrendChart data={dashboardData.trendData} />
                         <AttendanceTrendChart data={dashboardData.attendanceTrend} />
@@ -259,15 +304,14 @@ export const MDDashboardView = ({
                       </WorkflowSection>
 
                       <WorkflowSection
-                        title="System Aggregates"
-                        description="Real-time consolidation across all regional teams"
+                        title="System Performance"
+                        description="Real-time operational metrics"
                         icon={Activity}
                         variant="default"
                         className="lg:col-span-2"
                       >
                         <p className="text-sm leading-6 text-slate-600 mb-4">
-                          This panel consolidates real-time metrics across regional teams so you can review risk,
-                          workforce coverage, and approval pressure in one place.
+                          Key performance indicators consolidated from all operational regions and teams.
                         </p>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">

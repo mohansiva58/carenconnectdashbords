@@ -13,7 +13,7 @@ import { ServiceRequestsPanel } from "./ServiceRequestsPanel";
 import { WorkflowSection } from "@/components/layouts/WorkflowSection";
 import { MetricsStrip } from "@/components/layouts/MetricsStrip";
 import { SectionHeader } from "@/components/layouts/SectionHeader";
-import { OverviewTabsContainer } from "@/components/layouts/OverviewTabsContainer";
+import { HorizontalTabsContainer } from "@/components/layouts/HorizontalTabsContainer";
 import { DataTableFilter } from "@/components/filters/DataTableFilter";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { useFilters } from "@/hooks/useFilters";
@@ -59,7 +59,7 @@ export const AdminDashboardView = ({
   handleRejectLead: (id: string) => Promise<boolean>;
 }) => {
   const firstName = user?.name?.split(" ")[0] ?? "Admin";
-  const [activeOverviewTab, setActiveOverviewTab] = useState('quick-insights');
+  const [activeOverviewTab, setActiveOverviewTab] = useState('dashboard');
   const staffFilters = useFilters();
   const analyticsFilters = useFilters();
 
