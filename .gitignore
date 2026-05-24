@@ -9,7 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
-.env.e2e
+# .env.e2e
 dist-ssr
 *.local
 
@@ -23,6 +23,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
-.env.local
-.env.example
+# .env
+# .env.local
+# .env.example
