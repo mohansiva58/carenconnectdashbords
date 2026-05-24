@@ -9,7 +9,10 @@ import { AttendanceTable } from "@/components/Tables";
 import { StaffOverview } from "./StaffOverview";
 import { ComplaintsPanel } from "./ComplaintsPanel";
 import { ServiceRequestsPanel } from "./ServiceRequestsPanel";
-import { Activity, Users, AlertTriangle, CheckSquare, MapPinned, UserCheck, ClipboardList } from "lucide-react";
+import { WorkflowSection } from "@/components/layouts/WorkflowSection";
+import { MetricsStrip } from "@/components/layouts/MetricsStrip";
+import { SectionHeader } from "@/components/layouts/SectionHeader";
+import { Activity, Users, AlertTriangle, CheckSquare, MapPinned, UserCheck, ClipboardList, TrendingUp } from "lucide-react";
 
 export const CoordinatorStaffDashboardView = ({
   role,
@@ -87,40 +90,70 @@ export const CoordinatorStaffDashboardView = ({
         {/* Coordinator Overview panels */}
         {isCoordinator && (
           <div className="space-y-6">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-              <Users className="h-4 w-4 text-slate-400" />
-              <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">Team Status Metrics</h4>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              <KpiCard label="Active Today" value={dashboardData.kpis.todayAttendance} icon={UserCheck} tone="secondary" />
-              <KpiCard label="Total Scope" value={String(dashboardData.hierarchySummary?.scopeSize ?? 0)} icon={Users} tone="primary" />
-              <KpiCard
-                label="Total Customers"
-                value={dashboardData.kpis.totalCustomers || "0"}
+            {/* Team Status Metrics */}
+            <div>
+              <SectionHeader
+                subtitle="Team Operations"
+                title="Team Status Metrics"
                 icon={Users}
-                tone="secondary"
+                variant="h3"
               />
-              <KpiCard label="Open Complaints" value={dashboardData.kpis.openComplaints} icon={AlertTriangle} tone="warning" />
-              <KpiCard label="Leave Pending" value={dashboardData.kpis.pendingApprovals} icon={CheckSquare} tone="warning" />
             </div>
 
+            <MetricsStrip
+              grid={5}
+              metrics={[
+                {
+                  label: "Active Today",
+                  value: dashboardData.kpis.todayAttendance,
+                  icon: UserCheck,
+                  tone: "success",
+                },
+                {
+                  label: "Total Scope",
+                  value: dashboardData.hierarchySummary?.scopeSize ?? 0,
+                  icon: Users,
+                  tone: "primary",
+                },
+                {
+                  label: "Total Customers",
+                  value: dashboardData.kpis.totalCustomers || "0",
+                  icon: Users,
+                  tone: "info",
+                },
+                {
+                  label: "Open Complaints",
+                  value: dashboardData.kpis.openComplaints,
+                  icon: AlertTriangle,
+                  tone: "danger",
+                },
+                {
+                  label: "Leave Pending",
+                  value: dashboardData.kpis.pendingApprovals,
+                  icon: CheckSquare,
+                  tone: "warning",
+                },
+              ]}
+            />
+
+            {/* Detailed Performance Snapshot */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Monthly Avg Attendance</p>
-                <p className="text-2xl font-black text-indigo-600">{dashboardData.hierarchySummary?.monthlyAvgAttendance ?? 0}%</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Total Leaves (All Time)</p>
-                <p className="text-2xl font-black text-amber-600">{dashboardData.hierarchySummary?.totalLeaves ?? 0}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Active Assignments</p>
-                <p className="text-2xl font-black text-slate-700">{dashboardData.hierarchySummary?.activeAssignments ?? 0}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Completed Work</p>
-                <p className="text-2xl font-black text-emerald-600">{dashboardData.hierarchySummary?.completedProjects ?? 0}</p>
-              </div>
+              <WorkflowSection variant="compact" title="Monthly Avg">
+                <p className="text-3xl font-black text-indigo-600">{dashboardData.hierarchySummary?.monthlyAvgAttendance ?? 0}%</p>
+                <p className="mt-1 text-xs text-slate-500">Attendance</p>
+              </WorkflowSection>
+              <WorkflowSection variant="compact" title="Total Leaves">
+                <p className="text-3xl font-black text-amber-600">{dashboardData.hierarchySummary?.totalLeaves ?? 0}</p>
+                <p className="mt-1 text-xs text-slate-500">All Time</p>
+              </WorkflowSection>
+              <WorkflowSection variant="compact" title="Active Assignments">
+                <p className="text-3xl font-black text-slate-700">{dashboardData.hierarchySummary?.activeAssignments ?? 0}</p>
+                <p className="mt-1 text-xs text-slate-500">In Progress</p>
+              </WorkflowSection>
+              <WorkflowSection variant="compact" title="Completed Work">
+                <p className="text-3xl font-black text-emerald-600">{dashboardData.hierarchySummary?.completedProjects ?? 0}</p>
+                <p className="mt-1 text-xs text-slate-500">Projects</p>
+              </WorkflowSection>
             </div>
           </div>
         )}

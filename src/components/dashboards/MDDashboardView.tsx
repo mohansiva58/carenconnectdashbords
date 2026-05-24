@@ -10,6 +10,9 @@ import { MDOrganizationalChart } from "./MDOrganizationalChart";
 import { StaffOverview } from "./StaffOverview";
 import { ComplaintsPanel } from "./ComplaintsPanel";
 import { ServiceRequestsPanel } from "./ServiceRequestsPanel";
+import { WorkflowSection } from "@/components/layouts/WorkflowSection";
+import { MetricsStrip } from "@/components/layouts/MetricsStrip";
+import { SectionHeader } from "@/components/layouts/SectionHeader";
 import {
   AlertTriangle,
   BarChart3,
@@ -22,6 +25,8 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  TrendingUp,
+  Activity,
 } from "lucide-react";
 import {
   PermissionScopeGrid,
@@ -52,6 +57,9 @@ export const MDDashboardView = ({
   return (
     <>
       <TabsContent value="overview" className="space-y-8 outline-none mt-0">
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            SECTION: Executive Summary
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         <RBACPageHeader
           eyebrow="MD RBAC Console"
           title={`Executive workspace, ${firstName}`}
@@ -68,12 +76,34 @@ export const MDDashboardView = ({
           </div>
         </RBACPageHeader>
 
-        <RBACStatusStrip
-          items={[
-            { label: "Users in scope", value: dashboardData.staffList?.length || 0, icon: Users, tone: "indigo" },
-            { label: "Customers", value: dashboardData.kpis.totalCustomers || "0", icon: Database, tone: "emerald" },
-            { label: "Open complaints", value: dashboardData.kpis.openComplaints || "0", icon: AlertTriangle, tone: "rose" },
-            { label: "Pending approvals", value: dashboardData.kpis.pendingApprovals || "0", icon: CheckSquare, tone: "amber" },
+        {/* Key Metrics */}
+        <MetricsStrip
+          grid={4}
+          metrics={[
+            {
+              label: "Users in Scope",
+              value: dashboardData.staffList?.length || 0,
+              icon: Users,
+              tone: "primary",
+            },
+            {
+              label: "Total Customers",
+              value: dashboardData.kpis.totalCustomers || "0",
+              icon: Database,
+              tone: "success",
+            },
+            {
+              label: "Open Complaints",
+              value: dashboardData.kpis.openComplaints || "0",
+              icon: AlertTriangle,
+              tone: "danger",
+            },
+            {
+              label: "Pending Approvals",
+              value: dashboardData.kpis.pendingApprovals || "0",
+              icon: CheckSquare,
+              tone: "warning",
+            },
           ]}
         />
 
@@ -139,42 +169,62 @@ export const MDDashboardView = ({
           </div>
         </RBACSection>
 
-        <RBACSection>
-          <RBACSectionHeader
-            label="Analytics"
-            title="Service movement and attendance trends"
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            SECTION: Analytics & Trends
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className="space-y-4">
+          <SectionHeader
+            subtitle="Performance Intelligence"
+            title="Service Movement & Attendance Trends"
             description="Review system performance before approving structural or workflow changes."
-            icon={BarChart3}
+            icon={TrendingUp}
+            variant="h2"
           />
-          <div className="grid gap-6 lg:grid-cols-2">
-            <TrendChart data={dashboardData.trendData} />
-            <AttendanceTrendChart data={dashboardData.attendanceTrend} />
-          </div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-1">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">Service Request Distribution</h3>
-              <DistroPieChart data={dashboardData.distributionData} />
+          
+          <WorkflowSection
+            variant="default"
+            className="overflow-hidden"
+          >
+            <div className="grid gap-6 lg:grid-cols-2">
+              <TrendChart data={dashboardData.trendData} />
+              <AttendanceTrendChart data={dashboardData.attendanceTrend} />
             </div>
-            <div className="flex flex-col justify-center rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Control Summary</p>
-              <h3 className="mt-2 text-xl font-extrabold tracking-tight text-slate-950">Total system aggregates</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                This panel consolidates real-time metrics across regional teams so MD users can review risk,
+          </WorkflowSection>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <WorkflowSection
+              title="Service Distribution"
+              icon={Database}
+              variant="default"
+              className="lg:col-span-1"
+            >
+              <DistroPieChart data={dashboardData.distributionData} />
+            </WorkflowSection>
+
+            <WorkflowSection
+              title="System Aggregates"
+              description="Real-time consolidation across all regional teams"
+              icon={Activity}
+              variant="default"
+              className="lg:col-span-2"
+            >
+              <p className="text-sm leading-6 text-slate-600 mb-4">
+                This panel consolidates real-time metrics across regional teams so you can review risk,
                 workforce coverage, and approval pressure in one place.
               </p>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-amber-700">Escalated approvals</p>
-                  <p className="mt-2 text-2xl font-extrabold text-amber-950">{dashboardData.kpis.pendingApprovals}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-amber-700">Escalated Approvals</p>
+                  <p className="mt-3 text-3xl font-extrabold text-amber-950">{dashboardData.kpis.pendingApprovals}</p>
                 </div>
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Today's attendance</p>
-                  <p className="mt-2 text-2xl font-extrabold text-emerald-950">{dashboardData.kpis.todayAttendance}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Today&apos;s Attendance</p>
+                  <p className="mt-3 text-3xl font-extrabold text-emerald-950">{dashboardData.kpis.todayAttendance}</p>
                 </div>
               </div>
-            </div>
+            </WorkflowSection>
           </div>
-        </RBACSection>
+        </div>
       </TabsContent>
 
       <TabsContent value="reports" className="space-y-6 outline-none mt-0">
