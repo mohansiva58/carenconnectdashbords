@@ -14,7 +14,7 @@ export type AuthUser = {
 type AuthCtx = {
   user: AuthUser | null;
   token: string | null;
-  login: (email: string, password: string, role: Role) => Promise<{ ok: boolean; error?: string; user?: AuthUser }>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string; user?: AuthUser }>;
   signup: (data: Omit<AuthUser, "id" | "status"> & { password: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   pendingRequests: AuthUser[];
@@ -276,7 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login: AuthCtx["login"] = async (email, password, role) => {
+  const login: AuthCtx["login"] = async (email, password) => {
     try {
       const response = await apiRequest<any>(API_PATHS.login, {
         method: "POST",
@@ -288,10 +288,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!nextUser) {
         return { ok: false, error: "Login succeeded but user profile could not be derived from token/response." };
-      }
-      const roleMatches = nextUser.role === role;
-      if (!roleMatches) {
-        return { ok: false, error: "Selected role does not match this account." };
       }
       const effectiveUser: AuthUser = nextUser;
       if (nextUser.status === "pending") {

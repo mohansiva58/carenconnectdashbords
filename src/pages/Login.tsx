@@ -4,9 +4,8 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
-import { ROLES, Role, roleHome } from "@/lib/roles";
+import { roleHome } from "@/lib/roles";
 import { toast } from "sonner";
 
 const Login = () => {
@@ -14,16 +13,14 @@ const Login = () => {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role>("admin");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const loginRoles = ROLES.filter((r) => r.value !== "staff");
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     setIsSubmitting(true);
-    const r = await login(email, password, role);
+    const r = await login(email, password);
     setIsSubmitting(false);
 
     if (!r.ok) {
@@ -38,7 +35,7 @@ const Login = () => {
   return (
     <AuthShell
       title="Sign in to your dashboard"
-      subtitle="Choose your role and enter your credentials."
+      subtitle="Enter your credentials. Your account role opens the right dashboard automatically."
       footer={
         <>
           New here?{" "}
@@ -72,21 +69,6 @@ const Login = () => {
             placeholder="********"
             disabled={isSubmitting}
           />
-        </div>
-        <div className="space-y-2">
-          <Label>Role</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as Role)} disabled={isSubmitting}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {loginRoles.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {r.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
         <Button type="submit" className="w-full bg-gradient-brand shadow-brand hover:opacity-95" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
