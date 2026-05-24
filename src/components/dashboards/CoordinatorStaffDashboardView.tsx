@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { KpiCard } from "@/components/KpiCard";
 import { TrendChart, AttendanceTrendChart } from "@/components/Charts";
@@ -12,7 +13,11 @@ import { ServiceRequestsPanel } from "./ServiceRequestsPanel";
 import { WorkflowSection } from "@/components/layouts/WorkflowSection";
 import { MetricsStrip } from "@/components/layouts/MetricsStrip";
 import { SectionHeader } from "@/components/layouts/SectionHeader";
-import { Activity, Users, AlertTriangle, CheckSquare, MapPinned, UserCheck, ClipboardList, TrendingUp } from "lucide-react";
+import { OverviewTabsContainer } from "@/components/layouts/OverviewTabsContainer";
+import { DataTableFilter } from "@/components/filters/DataTableFilter";
+import { FilterChips } from "@/components/filters/FilterChips";
+import { useFilters } from "@/hooks/useFilters";
+import { Activity, Users, AlertTriangle, CheckSquare, MapPinned, UserCheck, ClipboardList, TrendingUp, BarChart, PieChart } from "lucide-react";
 
 export const CoordinatorStaffDashboardView = ({
   role,
@@ -27,6 +32,10 @@ export const CoordinatorStaffDashboardView = ({
   user: any;
   refresh: (force: boolean) => void;
 }) => {
+  const [activeOverviewTab, setActiveOverviewTab] = useState('quick-insights');
+  const staffFilters = useFilters();
+  const analyticsFilters = useFilters();
+  
   const isStaff = role === "staff";
   const isCoordinator = role === "coordinator";
   const isRegionalOrCluster = role === "regional_head" || role === "cluster_head";
@@ -80,82 +89,116 @@ export const CoordinatorStaffDashboardView = ({
           </div>
         </div>
 
-        {/* Staff / Team Directory */}
-        {!isStaff && dashboardData.staffList && (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <StaffOverview staff={dashboardData.staffList} data={dashboardData} viewerRole={role as any} />
-          </div>
-        )}
+        {/* Coordinator/Regional/Cluster Overview Tabs */}
+        {!isStaff && (
+          <OverviewTabsContainer
+            tabs={[
+              {
+                id: 'quick-insights',
+                label: 'Quick Insights',
+                icon: <Activity className="h-4 w-4" />,
+                content: (
+                  <div className="space-y-6">
+                    {/* Team Status Metrics */}
+                    <div>
+                      <SectionHeader
+                        subtitle="Team Operations"
+                        title="Team Status Metrics"
+                        icon={Users}
+                        variant="h3"
+                      />
+                    </div>
 
-        {/* Coordinator Overview panels */}
-        {isCoordinator && (
-          <div className="space-y-6">
-            {/* Team Status Metrics */}
-            <div>
-              <SectionHeader
-                subtitle="Team Operations"
-                title="Team Status Metrics"
-                icon={Users}
-                variant="h3"
-              />
-            </div>
+                    <MetricsStrip
+                      grid={5}
+                      metrics={[
+                        {
+                          label: "Active Today",
+                          value: dashboardData.kpis.todayAttendance,
+                          icon: UserCheck,
+                          tone: "success",
+                        },
+                        {
+                          label: "Total Scope",
+                          value: dashboardData.hierarchySummary?.scopeSize ?? 0,
+                          icon: Users,
+                          tone: "primary",
+                        },
+                        {
+                          label: "Total Customers",
+                          value: dashboardData.kpis.totalCustomers || "0",
+                          icon: Users,
+                          tone: "info",
+                        },
+                        {
+                          label: "Open Complaints",
+                          value: dashboardData.kpis.openComplaints,
+                          icon: AlertTriangle,
+                          tone: "danger",
+                        },
+                        {
+                          label: "Leave Pending",
+                          value: dashboardData.kpis.pendingApprovals,
+                          icon: CheckSquare,
+                          tone: "warning",
+                        },
+                      ]}
+                    />
 
-            <MetricsStrip
-              grid={5}
-              metrics={[
-                {
-                  label: "Active Today",
-                  value: dashboardData.kpis.todayAttendance,
-                  icon: UserCheck,
-                  tone: "success",
-                },
-                {
-                  label: "Total Scope",
-                  value: dashboardData.hierarchySummary?.scopeSize ?? 0,
-                  icon: Users,
-                  tone: "primary",
-                },
-                {
-                  label: "Total Customers",
-                  value: dashboardData.kpis.totalCustomers || "0",
-                  icon: Users,
-                  tone: "info",
-                },
-                {
-                  label: "Open Complaints",
-                  value: dashboardData.kpis.openComplaints,
-                  icon: AlertTriangle,
-                  tone: "danger",
-                },
-                {
-                  label: "Leave Pending",
-                  value: dashboardData.kpis.pendingApprovals,
-                  icon: CheckSquare,
-                  tone: "warning",
-                },
-              ]}
-            />
+                    {/* Detailed Performance Snapshot */}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <WorkflowSection variant="compact" title="Monthly Avg">
+                        <p className="text-3xl font-black text-indigo-600">{dashboardData.hierarchySummary?.monthlyAvgAttendance ?? 0}%</p>
+                        <p className="mt-1 text-xs text-slate-500">Attendance</p>
+                      </WorkflowSection>
+                      <WorkflowSection variant="compact" title="Total Leaves">
+                        <p className="text-3xl font-black text-amber-600">{dashboardData.hierarchySummary?.totalLeaves ?? 0}</p>
+                        <p className="mt-1 text-xs text-slate-500">All Time</p>
+                      </WorkflowSection>
+                      <WorkflowSection variant="compact" title="Active Assignments">
+                        <p className="text-3xl font-black text-slate-700">{dashboardData.hierarchySummary?.activeAssignments ?? 0}</p>
+                        <p className="mt-1 text-xs text-slate-500">In Progress</p>
+                      </WorkflowSection>
+                      <WorkflowSection variant="compact" title="Completed Work">
+                        <p className="text-3xl font-black text-emerald-600">{dashboardData.hierarchySummary?.completedProjects ?? 0}</p>
+                        <p className="mt-1 text-xs text-slate-500">Projects</p>
+                      </WorkflowSection>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: 'people',
+                label: 'People',
+                icon: <Users className="h-4 w-4" />,
+                badge: dashboardData.staffList?.length || 0,
+                content: (
+                  <div className="space-y-4">
+                    <DataTableFilter
+                      filters={staffFilters.filters}
+                      onFiltersChange={staffFilters.updateFilters}
+                      onReset={staffFilters.resetFilters}
+                      hasActiveFilters={staffFilters.hasActiveFilters}
+                      searchPlaceholder="Search team members..."
+                      showSearch={true}
+                    />
+                    <FilterChips
+                      chips={staffFilters.filterChips}
+                      onClearAll={staffFilters.clearAllFilters}
+                    />
 
-            {/* Detailed Performance Snapshot */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <WorkflowSection variant="compact" title="Monthly Avg">
-                <p className="text-3xl font-black text-indigo-600">{dashboardData.hierarchySummary?.monthlyAvgAttendance ?? 0}%</p>
-                <p className="mt-1 text-xs text-slate-500">Attendance</p>
-              </WorkflowSection>
-              <WorkflowSection variant="compact" title="Total Leaves">
-                <p className="text-3xl font-black text-amber-600">{dashboardData.hierarchySummary?.totalLeaves ?? 0}</p>
-                <p className="mt-1 text-xs text-slate-500">All Time</p>
-              </WorkflowSection>
-              <WorkflowSection variant="compact" title="Active Assignments">
-                <p className="text-3xl font-black text-slate-700">{dashboardData.hierarchySummary?.activeAssignments ?? 0}</p>
-                <p className="mt-1 text-xs text-slate-500">In Progress</p>
-              </WorkflowSection>
-              <WorkflowSection variant="compact" title="Completed Work">
-                <p className="text-3xl font-black text-emerald-600">{dashboardData.hierarchySummary?.completedProjects ?? 0}</p>
-                <p className="mt-1 text-xs text-slate-500">Projects</p>
-              </WorkflowSection>
-            </div>
-          </div>
+                    {dashboardData.staffList && (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <StaffOverview staff={dashboardData.staffList} data={dashboardData} viewerRole={role as any} />
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+            defaultTab={activeOverviewTab}
+            onTabChange={setActiveOverviewTab}
+          />
         )}
 
         {/* Staff Welcome overview message */}
