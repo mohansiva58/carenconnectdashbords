@@ -43,10 +43,14 @@ const StaffCard = ({
   data: DashboardViewData;
   onClick?: () => void;
 }) => {
+  const roleName = normalizeDashboardRole(member.role);
+  const isCustomer = roleName === "USER";
   const memberIdStr = String(member.id);
-  const att = data.attendanceRows?.find(
-    (a) => String(a.user) === `User #${memberIdStr}` || String(a.user) === memberIdStr
-  );
+  const att = isCustomer
+    ? undefined
+    : data.attendanceRows?.find(
+        (a) => String(a.user) === `User #${memberIdStr}` || String(a.user) === memberIdStr
+      );
   const isPresent = att?.status === "Present";
   const isAbsent = att?.status === "Absent";
   const isPending = String(member.status || "").toUpperCase() === "PENDING";
@@ -58,7 +62,9 @@ const StaffCard = ({
   return (
     <div
       onClick={onClick}
-      className="group relative flex flex-col justify-between gap-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400 hover:shadow-md cursor-pointer"
+      className={`group relative flex flex-col justify-between gap-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 ${
+        onClick ? "cursor-pointer hover:-translate-y-1 hover:border-indigo-400 hover:shadow-md" : ""
+      }`}
     >
       {isPending && (
         <div className="absolute inset-x-0 top-0 bg-amber-50 px-4 py-1.5 border-b border-amber-100 flex items-center justify-center">
@@ -106,6 +112,8 @@ const StaffCard = ({
             className={`mt-0.5 inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase ${
               isPending
                 ? "bg-amber-50 text-amber-700 border border-amber-100"
+                : isCustomer
+                ? "bg-rose-50 text-rose-700 border border-rose-100"
                 : isPresent
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
                 : isAbsent
@@ -113,7 +121,7 @@ const StaffCard = ({
                 : "bg-slate-50 text-slate-500 border border-slate-100"
             }`}
           >
-            {isPending ? "Pending" : isPresent ? "Active" : isAbsent ? "Away" : "Idle"}
+            {isPending ? "Pending" : isCustomer ? "Customer" : isPresent ? "Active" : isAbsent ? "Away" : "Idle"}
           </span>
         </div>
       </div>
@@ -267,6 +275,7 @@ export const StaffOverview = ({
         {sortedRoles.map((roleKey) => {
           const members = staffByRole[roleKey];
           const cfg = ROLE_CONFIG[roleKey] || ROLE_CONFIG.STAFF;
+          const supportsAttendance = roleKey !== "USER";
           return (
             <div key={roleKey} className="space-y-4">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
@@ -288,7 +297,7 @@ export const StaffOverview = ({
                     member={member}
                     cfg={cfg}
                     data={data}
-                    onClick={() => setSelectedStaffForAttendance(member)}
+                    onClick={supportsAttendance ? () => setSelectedStaffForAttendance(member) : undefined}
                   />
                 ))}
               </div>

@@ -11,6 +11,7 @@ export const StaffAttendanceList = ({
   data: DashboardViewData;
 }) => {
   const [selectedStaff, setSelectedStaff] = useState<any | null>(null);
+  const attendanceStaff = staff.filter((member) => String(member.role || "").trim().toUpperCase() !== "USER");
 
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/);
@@ -31,7 +32,7 @@ export const StaffAttendanceList = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {staff.map((member) => {
+          {attendanceStaff.map((member) => {
             const memberIdStr = String(member.id);
             const att = data.attendanceRows.find(
               (a) => String(a.user) === `User #${memberIdStr}` || String(a.user) === memberIdStr
