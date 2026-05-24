@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("admin");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const loginRoles = ROLES.filter((r) => r.value !== "staff");
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +80,7 @@ const Login = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ROLES.map((r) => (
+              {loginRoles.map((r) => (
                 <SelectItem key={r.value} value={r.value}>
                   {r.label}
                 </SelectItem>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
-import { ClipboardList, Search, Users, ShieldAlert } from "lucide-react";
+import { CheckCircle2, ClipboardList, Clock3, Route, Search, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { apiRequest } from "@/lib/api";
@@ -12,10 +12,24 @@ const isAssignableOperationalRole = (role?: string | null) => {
 
 const srStatusCfg: Record<string, { bg: string; text: string; dot: string }> = {
   Pending: { bg: "bg-amber-50 border-amber-100", text: "text-amber-700", dot: "bg-amber-400" },
-  Assigned: { bg: "bg-blue-50 border-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
-  "In Progress": { bg: "bg-indigo-50 border-indigo-100", text: "text-indigo-700", dot: "bg-indigo-500" },
+  Assigned: { bg: "bg-purple-50 border-purple-100", text: "text-purple-700", dot: "bg-purple-500" },
+  "In Progress": { bg: "bg-violet-50 border-violet-100", text: "text-violet-700", dot: "bg-violet-500" },
   Completed: { bg: "bg-emerald-50 border-emerald-100", text: "text-emerald-700", dot: "bg-emerald-500" },
-  Cancelled: { bg: "bg-slate-100 border-slate-200", text: "text-slate-500", dot: "bg-slate-400" },
+  Cancelled: { bg: "bg-rose-50 border-rose-100", text: "text-rose-700", dot: "bg-rose-400" },
+};
+
+const typeToneClasses = [
+  "bg-cyan-50 text-cyan-800 border-cyan-100",
+  "bg-violet-50 text-violet-800 border-violet-100",
+  "bg-emerald-50 text-emerald-800 border-emerald-100",
+  "bg-rose-50 text-rose-800 border-rose-100",
+  "bg-amber-50 text-amber-800 border-amber-100",
+];
+
+const getTypeTone = (type?: string | null) => {
+  const value = String(type || "service");
+  const index = value.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % typeToneClasses.length;
+  return typeToneClasses[index];
 };
 
 const StatusBadge = ({ label, cfg }: { label: string; cfg: { bg: string; text: string; dot: string } }) => (
@@ -165,18 +179,24 @@ const SRTableRow = ({
 
   const isAssigned = row.assignedTo !== "-" && !!row.assignedToId;
   const rowCfg = isAssigned ? srStatusCfg[row.status] || srStatusCfg["Assigned"] : cfg;
+  const typeTone = getTypeTone(row.type);
+  const titleText = String(row.title || "Service Request").trim();
+  const typeText = String(row.type || "").trim();
+  const showTypeLabel = typeText && typeText.toLowerCase() !== titleText.toLowerCase();
 
   return (
-    <tr className="group transition-colors hover:bg-slate-50/50">
+    <tr className={rowCfg.bg}>
       <td className="px-5 py-4 font-mono text-[11px] text-slate-400">#{row.id}</td>
       <td className="px-5 py-4">
-        <div className="flex flex-col">
-          <span className="font-bold text-slate-800 text-sm leading-tight group-hover:text-indigo-600 transition-colors">
-            {row.title}
+        <div className={`flex flex-col rounded-xl border p-3 ${typeTone}`}>
+          <span className="text-sm font-bold leading-tight">
+            {titleText}
           </span>
-          <span className="mt-1.5 inline-flex w-fit items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-            {row.type}
-          </span>
+          {showTypeLabel && (
+            <span className="mt-1.5 inline-flex w-fit items-center rounded-md bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+              {typeText}
+            </span>
+          )}
         </div>
       </td>
       <td className="px-5 py-4">
@@ -184,7 +204,7 @@ const SRTableRow = ({
       </td>
       <td className="px-5 py-4">
         {isAssigned ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600">
                 {row.assignedTo.charAt(0).toUpperCase()}
@@ -202,8 +222,8 @@ const SRTableRow = ({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400 italic">Unassigned</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs italic text-slate-400">Unassigned</span>
             {viewerRole !== "staff" && (
               <AssignStaffDropdown
                 requestId={row.id}
@@ -290,43 +310,66 @@ export const ServiceRequestsPanel = ({
       {/* KPI stats bar */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Pipeline</p>
-          <p className="mt-1 text-2xl font-black text-slate-800">{rows?.length || 0}</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Pipeline</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+              <Route className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-slate-800">{rows?.length || 0}</p>
         </div>
         <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-5 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Pending Assignment</p>
-          <p className="mt-1 text-2xl font-black text-amber-700">{pending}</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Pending Assignment</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+              <Clock3 className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-amber-700">{pending}</p>
         </div>
-        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Assigned / Active</p>
-          <p className="mt-1 text-2xl font-black text-indigo-700">{assigned}</p>
+        <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600">Assigned / Active</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-purple-700">
+              <Users className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-purple-700">{assigned}</p>
         </div>
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Successfully Closed</p>
-          <p className="mt-1 text-2xl font-black text-emerald-700">{completed}</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Successfully Closed</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-emerald-700">{completed}</p>
         </div>
       </div>
 
       {/* Header and Search */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <ClipboardList className="h-5 w-5" />
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+              <ClipboardList className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Assigned Services</h3>
+              <p className="text-xs text-slate-500">Track dispatch, ownership, and closure status</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-800">Assigned Services</h3>
-            <p className="text-xs text-slate-400">Track and dispatch field actions</p>
+
+          <div className="relative w-full sm:w-80">
+            <input
+              type="text"
+              placeholder="Search client, service, agent..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            />
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
           </div>
-        </div>
-        <div className="relative w-full sm:w-72">
-          <input
-            type="text"
-            placeholder="Search by client, service type..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-          />
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
         </div>
       </div>
 
@@ -336,7 +379,7 @@ export const ServiceRequestsPanel = ({
           const isActive = statusFilter === s;
           const cfg =
             s === "all"
-              ? { bg: "bg-slate-100/80 text-slate-700", border: "border-slate-200" }
+              ? { bg: isActive ? "bg-slate-800 text-white" : "bg-white text-slate-600", border: isActive ? "border-slate-800" : "border-slate-200" }
               : {
                   bg: isActive ? srStatusCfg[s]?.bg : "bg-white",
                   text: isActive ? srStatusCfg[s]?.text : "text-slate-500",
@@ -346,12 +389,10 @@ export const ServiceRequestsPanel = ({
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`flex shrink-0 items-center gap-2.5 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all duration-200 ${
-                isActive ? "shadow-xs" : "hover:border-slate-300"
-              } ${cfg.bg} ${cfg.text || ""} ${cfg.border}`}
+              className={`flex shrink-0 items-center gap-2.5 rounded-xl border px-4 py-2.5 text-xs font-bold transition-colors ${cfg.bg} ${cfg.text || ""} ${cfg.border}`}
             >
               <span>{s === "all" ? "All Requests" : s}</span>
-              <span className="rounded-full bg-slate-900/5 px-2 py-0.5 text-[10px] font-black tracking-tight bg-current/10">
+              <span className="rounded-full bg-current/10 px-2 py-0.5 text-[10px] font-black tracking-tight">
                 {counts[s] || 0}
               </span>
             </button>
@@ -373,14 +414,14 @@ export const ServiceRequestsPanel = ({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">ID</th>
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Service Title</th>
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Customer</th>
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Assigned Agent</th>
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Location</th>
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</th>
-                  <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Dispatched Date</th>
+                <tr className="border-b border-slate-800 bg-slate-900">
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">ID</th>
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">Service Title</th>
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">Customer</th>
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">Assigned Agent</th>
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">Location</th>
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">Status</th>
+                  <th className="px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest text-white">Dispatched Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

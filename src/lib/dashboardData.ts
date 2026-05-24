@@ -40,6 +40,15 @@ export interface AttendanceRow {
   status: AttendanceStatus;
 }
 
+export interface LeadRow {
+  id: string;
+  name: string;
+  category?: string;
+  date?: string;
+  status?: string;
+  location?: string;
+}
+
 
 type DashboardSummary = {
   totalAttendance?: number;
@@ -129,6 +138,8 @@ export interface DashboardViewData {
     status: "PENDING" | "APPROVED" | "REJECTED";
     requestedDays: number;
   }>;
+  leadsRows?: LeadRow[];
+  pendingLeadsRows?: LeadRow[];
   staffList?: any[];
   hierarchySummary?: {
     scopeSize: number;
@@ -360,9 +371,12 @@ async function buildDashboardViewData({
   role: Role;
   token: string | null;
 }): Promise<DashboardViewData> {
+  const needsHierarchySummary = role === "coordinator" || role === "regional_head" || role === "cluster_head" || role === "staff";
   const [summary, hierarchySummary] = await Promise.all([
     optionalAnalyticsRequest<DashboardSummary>(`/api/analytics/dashboard/${userId}`, token, emptySummary),
-    optionalAnalyticsRequest<any>(`/api/analytics/hierarchy-summary/${userId}`, token, emptyHierarchySummary),
+    needsHierarchySummary
+      ? optionalAnalyticsRequest<any>(`/api/analytics/hierarchy-summary/${userId}`, token, emptyHierarchySummary)
+      : Promise.resolve(emptyHierarchySummary),
   ]);
 
   const [complaintsPayload, attendancePayload, staffListPayload, serviceRequestsPayload, leaveRequestsPayload] = await Promise.all([
@@ -441,6 +455,9 @@ async function buildDashboardViewData({
   const pendingApprovals = toNumber(summary.pendingLeaveRequests);
   const totalComplaints = toNumber(summary.totalComplaints);
   const resolvedComplaints = toNumber(summary.resolvedComplaints);
+  const apiTotalCustomers = toNumber((summary as any).totalCustomers);
+  const rosterCustomerTotal = staffList.filter((member: any) => normalizeRole(member?.role) === "USER").length;
+  const totalCustomers = apiTotalCustomers > 0 ? apiTotalCustomers : rosterCustomerTotal;
   const todayKey = new Date().toISOString().slice(0, 10);
   const monthPrefix = todayKey.slice(0, 7);
   const coordinatorTodayAttendance = scopedAttendance.filter(
@@ -556,7 +573,7 @@ async function buildDashboardViewData({
       todayAttendance: fmtCount(role === "coordinator" ? coordinatorTodayAttendance : toNumber(summary.todayAttendance)),
       pendingApprovals: fmtCount(pendingApprovals),
       openComplaints: fmtCount(Math.max(totalComplaints - resolvedComplaints, 0)),
-      totalCustomers: fmtCount(toNumber((summary as any).totalCustomers)),
+      totalCustomers: fmtCount(totalCustomers),
     },
     trendData: Array.from(trendByDay.values()),
     attendanceTrend: Array.from(attendanceByDay.values()),

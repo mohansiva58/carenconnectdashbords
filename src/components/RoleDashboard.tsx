@@ -147,7 +147,6 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
       "overview",
       "sales",
       "assignments",
-      "reports",
       "customers",
       "attendance",
       "daily",
@@ -160,8 +159,6 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
 
     if (allowedTabs.includes(hash)) {
       setActiveTab(hash);
-    } else if (hash === "records") {
-      setActiveTab("reports");
     } else if (hash === "notifications") {
       setActiveTab("workspace");
       setWorkspaceTab("notifications");
@@ -199,12 +196,12 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
 
   return (
     <DashboardShell title={titleByRole[role]}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0 space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative min-w-0">
         {/* Floating Utility Controls (Refresh Trigger) */}
-        <div className="flex w-full justify-end">
+        <div className="mb-3 flex w-full justify-end lg:fixed lg:right-6 lg:top-24 lg:z-30 lg:mb-0 lg:w-auto">
           <button
             onClick={() => refresh(true)}
-            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh Systems

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import type { DashboardViewData } from "@/lib/dashboardData";
+import { useCallback, useEffect, useState } from "react";
+import type { DashboardViewData, LeadRow } from "@/lib/dashboardData";
 import type { Role } from "@/lib/roles";
 import { useAuth } from "@/lib/auth";
 import { API_PATHS, apiRequest, replacePathParams } from "@/lib/api";
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 type PendingLeadRowProps = {
-  lead: { id: string; name: string; category: string; date: string };
+  lead: LeadRow;
   onApproveLead: (id: string) => Promise<boolean> | boolean;
   onRejectLead: (id: string) => Promise<boolean> | boolean;
 };
@@ -47,7 +47,7 @@ const PendingLeadRow = ({ lead, onApproveLead, onRejectLead }: PendingLeadRowPro
     <div className="flex flex-col gap-3 rounded-lg border border-border p-4 md:flex-row md:items-center md:justify-between">
       <div>
         <p className="font-semibold">{lead.name}</p>
-        <p className="text-xs text-muted-foreground">{lead.category} - {lead.date}</p>
+        <p className="text-xs text-muted-foreground">{lead.category ?? "Lead"} - {lead.date ?? "-"}</p>
       </div>
       <div className="flex gap-2">
         <Button
@@ -102,8 +102,12 @@ export const WorkflowWorkspace = ({
   const [activeTab, setActiveTab] = useState<string>(initialTab);
 
   const canApprove = role !== "staff";
+  const leadsRows = Array.isArray(dashboardData?.leadsRows) ? dashboardData.leadsRows : [];
+  const pendingLeadsRows = Array.isArray(dashboardData?.pendingLeadsRows) ? dashboardData.pendingLeadsRows : [];
+  const complaintsRows = Array.isArray(dashboardData?.complaintsRows) ? dashboardData.complaintsRows : [];
+  const attendanceRows = Array.isArray(dashboardData?.attendanceRows) ? dashboardData.attendanceRows : [];
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!token) return;
     try {
       setIsLoadingNotifications(true);
@@ -118,11 +122,11 @@ export const WorkflowWorkspace = ({
     } finally {
       setIsLoadingNotifications(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     void loadNotifications();
-  }, [token]);
+  }, [loadNotifications]);
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -168,27 +172,27 @@ export const WorkflowWorkspace = ({
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-lg border border-border p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Visible leads</p>
-              <p className="mt-1 text-2xl font-extrabold">{dashboardData.leadsRows.length}</p>
+              <p className="mt-1 text-2xl font-extrabold">{leadsRows.length}</p>
             </div>
             <div className="rounded-lg border border-border p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Visible complaints</p>
-              <p className="mt-1 text-2xl font-extrabold">{dashboardData.complaintsRows.length}</p>
+              <p className="mt-1 text-2xl font-extrabold">{complaintsRows.length}</p>
             </div>
             <div className="rounded-lg border border-border p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Attendance rows</p>
-              <p className="mt-1 text-2xl font-extrabold">{dashboardData.attendanceRows.length}</p>
+              <p className="mt-1 text-2xl font-extrabold">{attendanceRows.length}</p>
             </div>
           </div>
         </TabsContent>
 
         {canApprove ? (
           <TabsContent value="approvals" className="space-y-2">
-            {dashboardData.pendingLeadsRows.length === 0 ? (
+            {pendingLeadsRows.length === 0 ? (
               <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
                 No pending lead approvals in your scope.
               </p>
             ) : (
-              dashboardData.pendingLeadsRows.map((lead) => (
+              pendingLeadsRows.map((lead) => (
                 <PendingLeadRow
                   key={lead.id}
                   lead={lead}
@@ -233,10 +237,10 @@ export const WorkflowWorkspace = ({
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-2">
-          {dashboardData.leadsRows.slice(0, 5).map((lead) => (
+          {leadsRows.slice(0, 5).map((lead) => (
             <div key={lead.id} className="rounded-lg border border-border p-3">
               <p className="font-medium">{lead.name}</p>
-              <p className="text-xs text-muted-foreground">Lead status: {lead.status} - {lead.location}</p>
+              <p className="text-xs text-muted-foreground">Lead status: {lead.status ?? "-"} - {lead.location ?? "-"}</p>
             </div>
           ))}
         </TabsContent>

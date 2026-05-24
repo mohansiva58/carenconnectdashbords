@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Printer, Download, Calendar } from "lucide-react";
+import { X, Printer, Download, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiRequest } from "@/lib/api";
 
@@ -26,6 +26,7 @@ export const StaffAttendanceModal = ({
   const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
   useEffect(() => {
     if (!member?.id || !token) return;
@@ -116,7 +117,35 @@ export const StaffAttendanceModal = ({
   }
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const daysInSelectedMonth = new Date(year, selectedMonth + 1, 0).getDate();
+  const firstDayOffset = new Date(year, selectedMonth, 1).getDay();
+  const selectedMonthDays = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
+
+  const selectedMonthStats = selectedMonthDays.reduce(
+    (stats, day) => {
+      const val = attendanceMap.get(`${selectedMonth}-${day}`) || "";
+      if (val === "P") stats.present += 1;
+      if (val === "L") stats.late += 1;
+      if (val === "A") stats.absent += 1;
+      if (val === "H") stats.holiday += 1;
+      return stats;
+    },
+    { present: 0, late: 0, absent: 0, holiday: 0 }
+  );
+
+  const moveMonth = (direction: -1 | 1) => {
+    const nextMonth = selectedMonth + direction;
+    if (nextMonth < 0) {
+      setSelectedMonth(11);
+      setYear((current) => current - 1);
+    } else if (nextMonth > 11) {
+      setSelectedMonth(0);
+      setYear((current) => current + 1);
+    } else {
+      setSelectedMonth(nextMonth);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
@@ -185,14 +214,29 @@ export const StaffAttendanceModal = ({
             </div>
           </div>
 
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm font-medium">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
               <span className="flex items-center gap-1"><span className="text-indigo-600">Present:</span> P</span>
               <span className="flex items-center gap-1"><span className="text-amber-500">Late:</span> L</span>
               <span className="flex items-center gap-1"><span className="text-rose-500">Absent:</span> A</span>
               <span className="flex items-center gap-1"><span className="text-slate-500">Holiday:</span> H</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => moveMonth(-1)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                <Calendar className="h-4 w-4 text-slate-500" />
+                <select className="bg-transparent outline-none cursor-pointer" value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))}>
+                  {months.map((month, index) => (
+                    <option key={month} value={index}>{month}</option>
+                  ))}
+                </select>
+              </div>
               <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700">
                 <Calendar className="h-4 w-4 text-slate-500" />
                 <select className="bg-transparent outline-none cursor-pointer" value={year} onChange={(e) => setYear(Number(e.target.value))}>
@@ -201,48 +245,58 @@ export const StaffAttendanceModal = ({
                   <option value={2024}>2024</option>
                 </select>
               </div>
+              <button
+                onClick={() => moveMonth(1)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                aria-label="Next month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="sticky left-0 bg-slate-50 p-3 font-semibold text-slate-600 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] w-24">
-                    Date | Month
-                  </th>
-                  {months.map((m) => (
-                    <th key={m} className="p-3 font-semibold text-slate-600 text-center border-r border-slate-100 last:border-none min-w-[80px]">
-                      {m}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={13} className="py-20 text-center text-slate-500">Loading attendance data...</td>
-                  </tr>
-                ) : days.map((day) => (
-                  <tr key={day} className="border-b border-slate-100 last:border-none hover:bg-slate-50/50 transition-colors">
-                    <td className="sticky left-0 bg-white p-3 font-medium text-slate-700 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                      {day}
-                    </td>
-                    {months.map((_, monthIndex) => {
-                      // Check valid date (e.g., Feb 30 is invalid)
-                      const isValidDate = new Date(year, monthIndex, day).getDate() === day;
-                      const val = isValidDate ? attendanceMap.get(`${monthIndex}-${day}`) || "" : "";
-                      
-                      return (
-                        <td key={monthIndex} className={`p-3 text-center border-r border-slate-100 last:border-none ${isValidDate ? getStatusBackground(val) : 'bg-slate-50/50'}`}>
-                          <span className={getStatusColor(val)}>{val}</span>
-                        </td>
-                      );
-                    })}
-                  </tr>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">{months[selectedMonth]} {year}</h3>
+                <p className="text-xs text-slate-500">Month view keeps every day visible without long scrolling.</p>
+              </div>
+              <div className="grid grid-cols-4 gap-2 text-center text-xs font-bold">
+                <div className="rounded-lg bg-indigo-50 px-3 py-2 text-indigo-700">P {selectedMonthStats.present}</div>
+                <div className="rounded-lg bg-amber-50 px-3 py-2 text-amber-700">L {selectedMonthStats.late}</div>
+                <div className="rounded-lg bg-rose-50 px-3 py-2 text-rose-700">A {selectedMonthStats.absent}</div>
+                <div className="rounded-lg bg-slate-100 px-3 py-2 text-slate-600">H {selectedMonthStats.holiday}</div>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="py-20 text-center text-sm text-slate-500">Loading attendance data...</div>
+            ) : (
+              <div className="grid grid-cols-7 gap-2">
+                {weekDays.map((day) => (
+                  <div key={day} className="rounded-lg bg-slate-50 py-2 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                    {day}
+                  </div>
                 ))}
-              </tbody>
-            </table>
+                {Array.from({ length: firstDayOffset }).map((_, index) => (
+                  <div key={`blank-${index}`} className="min-h-16 rounded-xl bg-slate-50/40" />
+                ))}
+                {selectedMonthDays.map((day) => {
+                  const val = attendanceMap.get(`${selectedMonth}-${day}`) || "";
+                  return (
+                    <div
+                      key={day}
+                      className={`flex min-h-16 flex-col justify-between rounded-xl border border-slate-100 p-3 ${getStatusBackground(val) || "bg-white"}`}
+                    >
+                      <span className="text-sm font-semibold text-slate-600">{day}</span>
+                      <span className={`self-end text-lg ${getStatusColor(val) || "text-slate-300"}`}>
+                        {val || "-"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </div>

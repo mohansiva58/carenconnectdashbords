@@ -9,7 +9,6 @@ import { roleLabel, type Role } from "@/lib/roles";
 import { BrandLogo } from "./BrandLogo";
 import {
   Activity,
-  BarChart3,
   Bell,
   CheckSquare,
   ClipboardList,
@@ -48,7 +47,6 @@ const navByRole: Record<Role, NavItem[]> = {
     { to: "/dashboard/md#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
     { to: "/dashboard/md#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
     { to: "/dashboard/md#approvals", label: "Approvals", icon: CheckSquare, section: "governance" },
-    { to: "/dashboard/md#reports", label: "All Reports", icon: BarChart3, section: "governance" },
   ],
   admin: [
     { to: "/dashboard/admin#overview", label: "Regional Data", icon: LayoutDashboard, section: "workspace" },

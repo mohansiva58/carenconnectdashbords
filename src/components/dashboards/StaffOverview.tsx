@@ -125,14 +125,28 @@ export const StaffOverview = ({
   staff,
   data,
   viewerRole,
+  showRoleFilters = true,
+  showHeader = true,
+  title = "Team Roster & Directory",
+  subtitle = "Search and monitor active operational units",
+  searchQuery: controlledSearchQuery,
+  onSearchQueryChange,
 }: {
   staff: any[];
   data: DashboardViewData;
   viewerRole: Role;
+  showRoleFilters?: boolean;
+  showHeader?: boolean;
+  title?: string;
+  subtitle?: string;
+  searchQuery?: string;
+  onSearchQueryChange?: (value: string) => void;
 }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string | null>(null);
   const [selectedStaffForAttendance, setSelectedStaffForAttendance] = useState<any | null>(null);
+  const searchQuery = controlledSearchQuery ?? internalSearchQuery;
+  const setSearchQuery = onSearchQueryChange ?? setInternalSearchQuery;
 
   const filteredStaff = useMemo(() => {
     return (staff || []).filter((s) => {
@@ -181,62 +195,65 @@ export const StaffOverview = ({
 
   return (
     <div className="space-y-6">
-      {/* Header section with Search */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <Users className="h-5 w-5" />
+      {showHeader && (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">{title}</h3>
+              <p className="text-xs text-slate-400">{subtitle}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-800">Team Roster & Directory</h3>
-            <p className="text-xs text-slate-400">Search and monitor active operational units</p>
+          <div className="relative w-full sm:w-72">
+            <input
+              type="text"
+              placeholder="Search roster..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            />
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
           </div>
         </div>
-        <div className="relative w-full sm:w-72">
-          <input
-            type="text"
-            placeholder="Search roster..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-          />
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-        </div>
-      </div>
+      )}
 
       {/* Role filter pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-        {Object.entries(ROLE_CONFIG).map(([roleKey, cfg]) => {
-          if (viewerRole === "coordinator" && ["MD", "ADMIN"].includes(roleKey)) return null;
+      {showRoleFilters && (
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+          {Object.entries(ROLE_CONFIG).map(([roleKey, cfg]) => {
+            if (viewerRole === "coordinator" && ["MD", "ADMIN"].includes(roleKey)) return null;
 
-          const count = roleStats[roleKey] || 0;
-          if (count === 0 && roleKey !== "STAFF") return null;
-          const isSelected = selectedRoleFilter === roleKey;
-          return (
-            <button
-              key={roleKey}
-              onClick={() => setSelectedRoleFilter(isSelected ? null : roleKey)}
-              className={`flex shrink-0 items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-200 ${
-                isSelected
-                  ? "border-indigo-500 bg-indigo-50/50 shadow-sm"
-                  : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs"
-              }`}
-              style={{ minWidth: "140px" }}
-            >
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-lg"
-                style={{ backgroundColor: `${cfg.color}12`, color: cfg.color }}
+            const count = roleStats[roleKey] || 0;
+            if (count === 0 && roleKey !== "STAFF") return null;
+            const isSelected = selectedRoleFilter === roleKey;
+            return (
+              <button
+                key={roleKey}
+                onClick={() => setSelectedRoleFilter(isSelected ? null : roleKey)}
+                className={`flex shrink-0 items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-200 ${
+                  isSelected
+                    ? "border-indigo-500 bg-indigo-50/50 shadow-sm"
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs"
+                }`}
+                style={{ minWidth: "140px" }}
               >
-                <cfg.icon className="h-4 w-4" />
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{cfg.label}</p>
-                <p className="text-sm font-extrabold text-slate-800">{count}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${cfg.color}12`, color: cfg.color }}
+                >
+                  <cfg.icon className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{cfg.label}</p>
+                  <p className="text-sm font-extrabold text-slate-800">{count}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Roster list grouped by Role */}
       <div className="space-y-8">

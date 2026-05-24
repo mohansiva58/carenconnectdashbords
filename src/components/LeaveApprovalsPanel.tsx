@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { CalendarDays, Check, Umbrella, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/api";
@@ -77,19 +77,34 @@ export const LeaveApprovalsPanel = ({ leaveRequests = [], onRefresh }: LeaveAppr
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-display text-lg font-bold">Pending leave requests</h3>
-        <Badge className="bg-amber-100 text-amber-700">{pendingLeaves.length}</Badge>
+    <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
+      <div className="border-b border-amber-100 bg-amber-50/70 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
+              <Umbrella className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-bold text-slate-950">Leave approvals</h3>
+              <p className="text-xs font-medium text-amber-700">Approve or reject staff leave requests</p>
+            </div>
+          </div>
+          <Badge className="bg-amber-100 text-amber-700">{pendingLeaves.length}</Badge>
+        </div>
       </div>
+      <div className="p-5">
       {pendingLeaves.length === 0 ? (
-        <p className="rounded-xl bg-muted p-6 text-center text-sm text-muted-foreground">No pending leave requests.</p>
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-6 text-center">
+          <CalendarDays className="mx-auto h-8 w-8 text-emerald-600" />
+          <p className="mt-2 text-sm font-bold text-emerald-900">No pending leave requests</p>
+          <p className="mt-1 text-xs text-emerald-700">The leave queue is clear.</p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {pendingLeaves.map((leave) => {
             const isWorking = workingId === leave.id;
             return (
-              <li key={leave.id} className="flex flex-col gap-3 rounded-xl border border-border p-4 hover:bg-muted/30 transition-colors">
+              <li key={leave.id} className="flex flex-col gap-3 rounded-xl border border-amber-100 bg-amber-50/30 p-4 transition-colors hover:bg-amber-50/60">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -125,7 +140,7 @@ export const LeaveApprovalsPanel = ({ leaveRequests = [], onRefresh }: LeaveAppr
                     variant="outline" 
                     onClick={() => void onRejectLeave(leave.id)} 
                     disabled={Boolean(workingId)}
-                    className="flex-1"
+                    className="flex-1 border-rose-200 text-rose-700 hover:bg-rose-50"
                   >
                     <X className="mr-1 h-4 w-4" />
                     {isWorking ? "Working..." : "Reject"}
@@ -145,6 +160,7 @@ export const LeaveApprovalsPanel = ({ leaveRequests = [], onRefresh }: LeaveAppr
           })}
         </ul>
       )}
+      </div>
     </div>
   );
 };
