@@ -145,7 +145,6 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
 
     const allowedTabs = [
       "overview",
-      "sales",
       "assignments",
       "customers",
       "attendance",

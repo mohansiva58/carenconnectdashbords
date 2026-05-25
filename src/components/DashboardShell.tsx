@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/auth";
 import { roleLabel, type Role } from "@/lib/roles";
 import { BrandLogo } from "./BrandLogo";
 import {
-  Activity,
   Bell,
   CheckSquare,
   ClipboardList,
@@ -43,14 +42,12 @@ type NavItem = {
 const navByRole: Record<Role, NavItem[]> = {
   md: [
     { to: "/dashboard/md#overview", label: "Overview", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/md#sales", label: "Sales Board", icon: Activity, section: "operations" },
     { to: "/dashboard/md#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
     { to: "/dashboard/md#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
     { to: "/dashboard/md#approvals", label: "Approvals", icon: CheckSquare, section: "governance" },
   ],
   admin: [
     { to: "/dashboard/admin#overview", label: "Regional Data", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/admin#sales", label: "Sales Board", icon: Activity, section: "operations" },
     { to: "/dashboard/admin#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
     { to: "/dashboard/admin#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
     { to: "/dashboard/admin#workspace", label: "Permissions & Roles", icon: ShieldCheck, section: "governance" },

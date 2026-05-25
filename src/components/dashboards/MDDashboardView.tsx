@@ -4,7 +4,6 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ApprovalsPanel } from "@/components/Approvals";
 import { LeaveApprovalsPanel } from "@/components/LeaveApprovalsPanel";
 import { WorkflowWorkspace } from "@/components/WorkflowWorkspace";
-import { SalesBoard } from "@/components/dashboards/SalesBoard";
 import { PeopleRoleTabs } from "./PeopleRoleTabs";
 import { OverviewActionCards } from "./OverviewActionCards";
 import { ComplaintsPanel } from "./ComplaintsPanel";
@@ -13,17 +12,13 @@ import { MetricsStrip } from "@/components/layouts/MetricsStrip";
 import { HorizontalTabsContainer } from "@/components/layouts/HorizontalTabsContainer";
 import {
   AlertTriangle,
-  CheckCircle2,
   CheckSquare,
   ClipboardList,
   Database,
-  ShieldCheck,
   Users,
   Activity,
-  HeartPulse,
 } from "lucide-react";
 import {
-  RBACPageHeader,
   RBACSectionHeader,
 } from "./RBACPanelPrimitives";
 
@@ -43,7 +38,6 @@ export const MDDashboardView = ({
   handleApproveLead: (id: string) => Promise<boolean>;
   handleRejectLead: (id: string) => Promise<boolean>;
 }) => {
-  const firstName = user?.name?.split(" ")[0] ?? "MD";
   const [activeOverviewTab, setActiveOverviewTab] = useState('dashboard');
   const [activePeopleRoleTab, setActivePeopleRoleTab] = useState('all');
   const openPeopleTab = (roleTab: string) => {
@@ -54,22 +48,6 @@ export const MDDashboardView = ({
   return (
     <>
       <TabsContent value="overview" className="outline-none mt-0">
-        <RBACPageHeader
-          eyebrow="MD Dashboard"
-          title={`Executive workspace, ${firstName}`}
-          description="Full-system oversight for identity, hierarchy, approvals, service pipelines, and organization-wide reporting."
-          icon={ShieldCheck}
-          tone="indigo"
-        >
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <div className="flex items-center gap-2 text-emerald-700">
-              <CheckCircle2 className="h-4 w-4" />
-              <span className="text-xs font-extrabold uppercase tracking-widest">Global Access</span>
-            </div>
-            <p className="mt-1 text-sm font-semibold text-emerald-950">All regions, roles, approvals, and analytics</p>
-          </div>
-        </RBACPageHeader>
-
         {/* Horizontal Tab Navigation */}
         <HorizontalTabsContainer
           tabs={[
@@ -103,13 +81,6 @@ export const MDDashboardView = ({
 
                   <OverviewActionCards
                     actions={[
-                      {
-                        label: "Sales Board",
-                        value: dashboardData.leadsRows?.length || 0,
-                        href: "#sales",
-                        icon: HeartPulse,
-                        tone: "cyan",
-                      },
                       {
                         label: "Assigned Tasks",
                         value: dashboardData.serviceRequestsRows?.length || 0,
@@ -164,10 +135,6 @@ export const MDDashboardView = ({
           defaultTab={activeOverviewTab}
           onTabChange={setActiveOverviewTab}
         />
-      </TabsContent>
-
-      <TabsContent value="sales" className="outline-none mt-0">
-        <SalesBoard leadsRows={dashboardData.leadsRows || []} />
       </TabsContent>
 
       <TabsContent value="approvals" className="space-y-6 outline-none mt-0">

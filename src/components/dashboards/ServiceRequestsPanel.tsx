@@ -96,10 +96,14 @@ const AssignStaffDropdown = ({
       <button
         onClick={() => setOpen((v) => !v)}
         disabled={loading}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200/80 bg-indigo-50/50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 disabled:opacity-50"
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
+          currentAssignedToId
+            ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
+            : "border-indigo-200/80 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50"
+        }`}
       >
         <Users className="h-3.5 w-3.5" />
-        {loading ? "Assigning…" : "Assign Staff"}
+        {loading ? "Assigning..." : currentAssignedToId ? "Reassign" : "Assign Staff"}
       </button>
       {open && (
         <>
@@ -258,16 +262,33 @@ export const ServiceRequestsPanel = ({
 }) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter);
+  const [serviceTitleFilter, setServiceTitleFilter] = useState("all");
+
+  const serviceTitleOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        (rows || [])
+          .map((r) => String(r.title || "").trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
 
   const filtered = useMemo(() => {
     return (rows || []).filter((r) => {
       const q = search.toLowerCase();
+      const title = String(r.title || "");
+      const customerName = String(r.customerName || "");
+      const assignedTo = String(r.assignedTo || "");
+      const type = String(r.type || "");
       const matchSearch =
         !q ||
-        r.title.toLowerCase().includes(q) ||
-        r.customerName.toLowerCase().includes(q) ||
-        r.assignedTo.toLowerCase().includes(q) ||
-        r.type.toLowerCase().includes(q);
+        title.toLowerCase().includes(q) ||
+        customerName.toLowerCase().includes(q) ||
+        assignedTo.toLowerCase().includes(q) ||
+        type.toLowerCase().includes(q);
+
+      const matchServiceTitle = serviceTitleFilter === "all" || title === serviceTitleFilter;
 
       const matchStatus =
         statusFilter === "all" ||
@@ -277,9 +298,9 @@ export const ServiceRequestsPanel = ({
             (!!r.assignedToId && r.status !== "Completed" && r.status !== "Cancelled")
           : r.status === statusFilter);
 
-      return matchSearch && matchStatus;
+      return matchSearch && matchServiceTitle && matchStatus;
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, search, serviceTitleFilter, statusFilter]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: (rows || []).length };
@@ -360,15 +381,30 @@ export const ServiceRequestsPanel = ({
             </div>
           </div>
 
-          <div className="relative w-full sm:w-80">
-            <input
-              type="text"
-              placeholder="Search client, service, agent..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-            />
-            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <select
+              aria-label="Filter by service title"
+              value={serviceTitleFilter}
+              onChange={(e) => setServiceTitleFilter(e.target.value)}
+              className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 outline-none transition duration-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 sm:w-56"
+            >
+              <option value="all">All service titles</option>
+              {serviceTitleOptions.map((title) => (
+                <option key={title} value={title}>
+                  {title}
+                </option>
+              ))}
+            </select>
+            <div className="relative w-full sm:w-80">
+              <input
+                type="text"
+                placeholder="Search client, service, agent..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              />
+              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            </div>
           </div>
         </div>
       </div>
