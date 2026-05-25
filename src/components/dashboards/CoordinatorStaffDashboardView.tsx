@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { KpiCard } from "@/components/KpiCard";
 import { TrendChart, AttendanceTrendChart } from "@/components/Charts";
+import { BrandWatermark } from "@/components/BrandWatermark";
 import { AssignmentPanel } from "@/components/dashboards/AssignmentPanel";
 import { LiveStaffMap } from "@/components/dashboards/LiveStaffMap";
 import { StaffAttendanceList } from "@/components/dashboards/StaffAttendanceList";
@@ -64,7 +65,8 @@ export const CoordinatorStaffDashboardView = ({
       {/* ══════════════════════════════════════
           TAB: OVERVIEW
       ══════════════════════════════════════ */}
-      <TabsContent value="overview" className="space-y-8 outline-none mt-0">
+      <TabsContent value="overview" className="outline-none mt-0">
+        <BrandWatermark className="space-y-8 bg-white/25 p-0">
         {/* Premium Welcome Gradient Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-9 text-white shadow-xl shadow-slate-200/50">
           <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-teal-500/25 blur-3xl" />
@@ -210,6 +212,7 @@ export const CoordinatorStaffDashboardView = ({
             </p>
           </div>
         )}
+        </BrandWatermark>
       </TabsContent>
 
       {/* ══════════════════════════════════════

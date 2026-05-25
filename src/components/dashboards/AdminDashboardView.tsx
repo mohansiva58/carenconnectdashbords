@@ -4,6 +4,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ApprovalsPanel } from "@/components/Approvals";
 import { LeaveApprovalsPanel } from "@/components/LeaveApprovalsPanel";
 import { WorkflowWorkspace } from "@/components/WorkflowWorkspace";
+import { BrandWatermark } from "@/components/BrandWatermark";
 import { PeopleRoleTabs } from "./PeopleRoleTabs";
 import { OverviewActionCards } from "./OverviewActionCards";
 import { ComplaintsPanel } from "./ComplaintsPanel";
@@ -48,34 +49,35 @@ export const AdminDashboardView = ({
   return (
     <>
       <TabsContent value="overview" className="outline-none mt-0">
-        <HorizontalTabsContainer
-          tabs={[
-            {
-              id: 'dashboard',
-              label: 'Dashboard',
-              icon: <Activity className="h-4 w-4" />,
-              tone: 'blue',
-              content: (
-                <div className="space-y-6">
-                  <MetricsStrip
-                    grid={2}
-                    metrics={[
-                      {
-                        label: "Users Managed",
-                        value: dashboardData.staffList?.length || 0,
-                        icon: Users,
-                        tone: "primary",
-                        onClick: () => openPeopleTab('all'),
-                      },
-                      {
-                        label: "Total Customers",
-                        value: dashboardData.kpis.totalCustomers || "0",
-                        icon: Database,
-                        tone: "success",
-                        onClick: () => openPeopleTab('customers'),
-                      },
-                    ]}
-                  />
+        <BrandWatermark className="bg-white/35 p-0">
+          <HorizontalTabsContainer
+            tabs={[
+              {
+                id: 'dashboard',
+                label: 'Dashboard',
+                icon: <Activity className="h-4 w-4" />,
+                tone: 'blue',
+                content: (
+                  <div className="space-y-6">
+                    <MetricsStrip
+                      grid={2}
+                      metrics={[
+                        {
+                          label: "Users Managed",
+                          value: dashboardData.staffList?.length || 0,
+                          icon: Users,
+                          tone: "primary",
+                          onClick: () => openPeopleTab('all'),
+                        },
+                        {
+                          label: "Total Customers",
+                          value: dashboardData.kpis.totalCustomers || "0",
+                          icon: Database,
+                          tone: "success",
+                          onClick: () => openPeopleTab('customers'),
+                        },
+                      ]}
+                    />
 
                   <OverviewActionCards
                     actions={[
@@ -132,7 +134,8 @@ export const AdminDashboardView = ({
           activeTab={activeOverviewTab}
           defaultTab={activeOverviewTab}
           onTabChange={setActiveOverviewTab}
-        />
+          />
+        </BrandWatermark>
       </TabsContent>
 
       <TabsContent value="approvals" className="space-y-6 outline-none mt-0">
