@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DashboardViewData, LeadRow } from "@/lib/dashboardData";
 import type { Role } from "@/lib/roles";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { API_PATHS, apiRequest, replacePathParams } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

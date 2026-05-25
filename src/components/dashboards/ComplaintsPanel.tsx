@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, Search, Users, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 
 const isAssignableOperationalRole = (role?: string | null) => {
@@ -31,11 +31,13 @@ const AssignComplaintDropdown = ({
   complaintId,
   staffList,
   currentAssignedToId,
+  isResolved,
   onAssigned,
 }: {
   complaintId: string;
   staffList: any[];
   currentAssignedToId?: number | null;
+  isResolved?: boolean;
   onAssigned: (staffId: number, staffName: string) => void;
 }) => {
   const { token } = useAuth();
@@ -59,10 +61,10 @@ const AssignComplaintDropdown = ({
       await apiRequest(`/api/operations/complaints/${complaintId}/assign`, {
         method: "PUT",
         token,
-        body: { assigned_to: staffId, remarks: "Assigned via Dashboard" },
+        body: { assigned_to: staffId, remarks: isResolved ? "Reassigned via Dashboard" : "Assigned via Dashboard" },
       });
       onAssigned(staffId, staffName);
-      toast.success(`Complaint assigned to ${staffName}`);
+      toast.success(isResolved ? `Complaint reassigned to ${staffName}` : `Complaint assigned to ${staffName}`);
     } catch {
       toast.error("Failed to assign complaint");
     } finally {
@@ -80,7 +82,7 @@ const AssignComplaintDropdown = ({
         className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200/80 bg-indigo-50/50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 disabled:opacity-50"
       >
         <Users className="h-3.5 w-3.5" />
-        {loading ? "Assigning…" : "Assign Staff"}
+        {loading ? "Assigning..." : isResolved ? "Reassign Staff" : "Assign Staff"}
       </button>
       {open && (
         <>
@@ -191,6 +193,7 @@ const ComplaintTableRow = ({
               complaintId={row.id}
               staffList={staffList}
               currentAssignedToId={row.assignedToId}
+              isResolved={row.status === "Resolved"}
               onAssigned={handleAssigned}
             />
           </div>
@@ -201,6 +204,7 @@ const ComplaintTableRow = ({
               complaintId={row.id}
               staffList={staffList}
               currentAssignedToId={null}
+              isResolved={row.status === "Resolved"}
               onAssigned={handleAssigned}
             />
           </div>

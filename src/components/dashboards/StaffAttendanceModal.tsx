@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, Printer, Download, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 
 function getInitials(name: string) {

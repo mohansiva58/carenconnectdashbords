@@ -4,7 +4,7 @@
 
 import { ReactNode, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { roleLabel, type Role } from "@/lib/roles";
 import { BrandLogo } from "./BrandLogo";
 import {

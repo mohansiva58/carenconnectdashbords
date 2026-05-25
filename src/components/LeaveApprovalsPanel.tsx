@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Check, Umbrella, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

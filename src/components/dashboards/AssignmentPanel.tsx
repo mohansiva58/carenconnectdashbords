@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

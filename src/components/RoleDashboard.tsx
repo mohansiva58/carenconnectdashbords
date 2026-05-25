@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { fetchDashboardViewData, clearDashboardCache, type DashboardViewData } from "@/lib/dashboardData";
 import { MDDashboardView } from "./dashboards/MDDashboardView";
 import { AdminDashboardView } from "./dashboards/AdminDashboardView";

@@ -1,37 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { useCallback, useEffect, useState, ReactNode } from "react";
 import { Role } from "./roles";
 import { apiRequest, API_PATHS, ApiError, replacePathParams } from "./api";
+import { AuthContext } from "./auth-context";
+import type { AuthCtx, AuthUser } from "./auth-types";
 
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role: Role;
-  status: "approved" | "pending" | "rejected";
-};
+type AnyRecord = Record<string, unknown>;
 
-type AuthCtx = {
-  user: AuthUser | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string; user?: AuthUser }>;
-  signup: (data: Omit<AuthUser, "id" | "status"> & { password: string }) => Promise<{ ok: boolean; error?: string }>;
-  logout: () => void;
-  pendingRequests: AuthUser[];
-  approveRequest: (id: string) => Promise<{ ok: boolean; error?: string }>;
-  rejectRequest: (id: string) => Promise<{ ok: boolean; error?: string }>;
-  approveLead: (id: string) => Promise<{ ok: boolean; error?: string }>;
-  rejectLead: (id: string) => Promise<{ ok: boolean; error?: string }>;
-};
-
-const Ctx = createContext<AuthCtx | null>(null);
 const SESSION = "cac.session";
 const TOKEN = "cac.token";
 
-const asRecord = (value: unknown): Record<string, any> | null => {
+const asRecord = (value: unknown): AnyRecord | null => {
   if (!value || typeof value !== "object") return null;
-  return value as Record<string, any>;
+  return value as AnyRecord;
 };
+
+const getRecord = (record: AnyRecord, key: string) => asRecord(record[key]);
+
+const getArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
 
 const normalizeRole = (value: unknown): Role | null => {
   const raw = String(value ?? "")
@@ -93,10 +78,11 @@ const toAuthUser = (input: unknown): AuthUser | null => {
 const extractUser = (payload: unknown): AuthUser | null => {
   const root = asRecord(payload);
   if (!root) return null;
+  const data = getRecord(root, "data");
 
   return (
     toAuthUser(root.user) ??
-    toAuthUser(root.data?.user) ??
+    toAuthUser(data?.user) ??
     toAuthUser(root.data) ??
     toAuthUser(root.profile) ??
     toAuthUser(root)
@@ -106,19 +92,20 @@ const extractUser = (payload: unknown): AuthUser | null => {
 const extractToken = (payload: unknown): string | null => {
   const root = asRecord(payload);
   if (!root) return null;
+  const data = getRecord(root, "data");
   return (
-    String(root.accessToken ?? root.token ?? root.jwt ?? root.data?.token ?? root.data?.accessToken ?? "").trim() || null
+    String(root.accessToken ?? root.token ?? root.jwt ?? data?.token ?? data?.accessToken ?? "").trim() || null
   );
 };
 
-const decodeJwtPayload = (token: string): Record<string, any> | null => {
+const decodeJwtPayload = (token: string): AnyRecord | null => {
   try {
     const parts = token.split(".");
     if (parts.length < 2) return null;
     const raw = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const pad = raw.length % 4 ? "=".repeat(4 - (raw.length % 4)) : "";
     const json = atob(raw + pad);
-    return JSON.parse(json);
+    return asRecord(JSON.parse(json));
   } catch {
     return null;
   }
@@ -155,17 +142,26 @@ const toUserFromToken = (token: string, emailInput: string): AuthUser | null => 
   };
 };
 
+const isSameUser = (left: AuthUser, right: AuthUser) =>
+  left.id === right.id &&
+  left.name === right.name &&
+  left.email === right.email &&
+  left.phone === right.phone &&
+  left.role === right.role &&
+  left.status === right.status;
+
 const extractPendingUsers = (payload: unknown): AuthUser[] => {
   const root = asRecord(payload);
   if (!root) return [];
+  const data = getRecord(root, "data");
 
   const rows =
-    (Array.isArray(root) ? root : null) ??
-    (Array.isArray(root.users) ? root.users : null) ??
-    (Array.isArray(root.pendingUsers) ? root.pendingUsers : null) ??
-    (Array.isArray(root.data?.users) ? root.data.users : null) ??
-    (Array.isArray(root.data?.pendingUsers) ? root.data.pendingUsers : null) ??
-    (Array.isArray(root.data) ? root.data : null) ??
+    getArray(payload) ??
+    getArray(root.users) ??
+    getArray(root.pendingUsers) ??
+    getArray(data?.users) ??
+    getArray(data?.pendingUsers) ??
+    getArray(root.data) ??
     [];
 
   return rows
@@ -183,12 +179,35 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 const readSessionUser = (): AuthUser | null => {
   try {
     const token = localStorage.getItem(TOKEN);
-    if (!token || isTokenExpired(token)) return null;
+    if (token && isTokenExpired(token)) {
+      localStorage.removeItem(TOKEN);
+      localStorage.removeItem(SESSION);
+      return null;
+    }
     const raw = localStorage.getItem(SESSION);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
     return null;
+  }
+};
+
+const persistSession = (nextUser: AuthUser, nextToken: string | null) => {
+  try {
+    localStorage.setItem(SESSION, JSON.stringify(nextUser));
+    if (nextToken) localStorage.setItem(TOKEN, nextToken);
+    else localStorage.removeItem(TOKEN);
+  } catch {
+    // State still updates in memory even if browser storage is unavailable.
+  }
+};
+
+const clearPersistedSession = () => {
+  try {
+    localStorage.removeItem(TOKEN);
+    localStorage.removeItem(SESSION);
+  } catch {
+    // Ignore storage failures during logout/session expiry.
   }
 };
 
@@ -213,6 +232,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pendingRequests, setPendingRequests] = useState<AuthUser[]>([]);
 
   const clearSession = useCallback(() => {
+    clearPersistedSession();
     setUser(null);
     setToken(null);
     setPendingRequests([]);
@@ -236,7 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const response = await apiRequest<any>(API_PATHS.pendingUsers, { token: activeToken });
+        const response = await apiRequest<unknown>(API_PATHS.pendingUsers, { token: activeToken });
         setPendingRequests(extractPendingUsers(response));
       } catch {
         setPendingRequests([]);
@@ -255,9 +275,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         if (API_PATHS.me) {
-          const response = await apiRequest<any>(API_PATHS.me, { token });
+          const response = await apiRequest<unknown>(API_PATHS.me, { token });
           const current = extractUser(response);
-          if (!cancelled && current) {
+          if (!cancelled && current && !isSameUser(user, current)) {
             setUser(current);
           }
         }
@@ -274,11 +294,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshPendingRequests, token, user]);
 
   const login: AuthCtx["login"] = async (email, password) => {
     try {
-      const response = await apiRequest<any>(API_PATHS.login, {
+      const response = await apiRequest<unknown>(API_PATHS.login, {
         method: "POST",
         body: { email, password },
       });
@@ -299,6 +319,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(effectiveUser);
       setToken(nextToken);
+      persistSession(effectiveUser, nextToken);
       await refreshPendingRequests(effectiveUser, nextToken);
 
       return { ok: true, user: effectiveUser };
@@ -382,6 +403,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshPendingRequests]);
 
   useEffect(() => {
+    const syncSession = (event: StorageEvent) => {
+      if (event.key !== SESSION && event.key !== TOKEN) return;
+
+      const nextToken = readToken();
+      const nextUser = readSessionUser();
+      setToken(nextToken);
+      setUser(nextUser);
+      if (!nextUser) setPendingRequests([]);
+    };
+
+    window.addEventListener("storage", syncSession);
+    return () => window.removeEventListener("storage", syncSession);
+  }, [refreshPendingRequests, token, user]);
+
+  useEffect(() => {
     if (!token) return;
     const expiryMs = getTokenExpiryMs(token);
     if (!expiryMs) return;
@@ -400,14 +436,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession, token]);
 
   return (
-    <Ctx.Provider value={{ user, token, login, signup, logout, pendingRequests, approveRequest, rejectRequest, approveLead, rejectLead }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout, pendingRequests, approveRequest, rejectRequest, approveLead, rejectLead }}>
       {children}
-    </Ctx.Provider>
+    </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const c = useContext(Ctx);
-  if (!c) throw new Error("useAuth must be used within AuthProvider");
-  return c;
 }

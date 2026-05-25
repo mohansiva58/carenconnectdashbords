@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { roleLabel } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Check, ShieldCheck, UserPlus, X } from "lucide-react";

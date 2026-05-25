@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2, ClipboardList, Clock3, Route, Search, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 
 const isAssignableOperationalRole = (role?: string | null) => {

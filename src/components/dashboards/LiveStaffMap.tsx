@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 import { MapPinned, Navigation, RefreshCw, UserCheck, Clock } from "lucide-react";
 
