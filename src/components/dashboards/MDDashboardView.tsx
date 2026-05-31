@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { ApprovalsPanel } from "@/components/Approvals";
 import { LeaveApprovalsPanel } from "@/components/LeaveApprovalsPanel";
@@ -25,6 +24,11 @@ import {
 
 export const MDDashboardView = ({
   workspaceTab,
+  activeOverviewTab,
+  activePeopleRoleTab,
+  onOverviewTabChange,
+  onPeopleRoleTabChange,
+  dashboardBasePath,
   dashboardData,
   user,
   refresh,
@@ -33,17 +37,19 @@ export const MDDashboardView = ({
 }: {
   activeTab: string;
   workspaceTab: any;
+  activeOverviewTab: string;
+  activePeopleRoleTab: string;
+  onOverviewTabChange: (tabId: string) => void;
+  onPeopleRoleTabChange: (tabId: string) => void;
+  dashboardBasePath: string;
   dashboardData: any;
   user: any;
   refresh: (force: boolean) => void;
   handleApproveLead: (id: string) => Promise<boolean>;
   handleRejectLead: (id: string) => Promise<boolean>;
 }) => {
-  const [activeOverviewTab, setActiveOverviewTab] = useState('dashboard');
-  const [activePeopleRoleTab, setActivePeopleRoleTab] = useState('all');
   const openPeopleTab = (roleTab: string) => {
-    setActivePeopleRoleTab(roleTab);
-    setActiveOverviewTab('people');
+    onPeopleRoleTabChange(roleTab);
   };
 
   return (
@@ -86,14 +92,14 @@ export const MDDashboardView = ({
                       {
                         label: "Assigned Tasks",
                         value: dashboardData.serviceRequestsRows?.length || 0,
-                        href: "#assigned-tasks",
+                        href: `${dashboardBasePath}/assigned-tasks`,
                         icon: ClipboardList,
                         tone: "purple",
                       },
                       {
                         label: "Complaints",
                         value: dashboardData.complaintsRows?.length || 0,
-                        href: "#complaints",
+                        href: `${dashboardBasePath}/complaints`,
                         icon: AlertTriangle,
                         tone: "rose",
                       },
@@ -101,7 +107,7 @@ export const MDDashboardView = ({
                         label: "Approvals",
                         eyebrow: "Governance",
                         value: dashboardData.kpis.pendingApprovals || "0",
-                        href: "#approvals",
+                        href: `${dashboardBasePath}/approvals`,
                         icon: CheckSquare,
                         tone: "amber",
                       },
@@ -127,7 +133,7 @@ export const MDDashboardView = ({
                     title="All staff members and operational status"
                     description="Switch between MD, admin, regional head, cluster, and all-user views."
                     activeRoleTab={activePeopleRoleTab}
-                    onRoleTabChange={setActivePeopleRoleTab}
+                    onRoleTabChange={onPeopleRoleTabChange}
                   />
                 ) : null
               ),
@@ -135,7 +141,7 @@ export const MDDashboardView = ({
           ]}
           activeTab={activeOverviewTab}
           defaultTab={activeOverviewTab}
-          onTabChange={setActiveOverviewTab}
+          onTabChange={onOverviewTabChange}
           />
         </BrandWatermark>
       </TabsContent>

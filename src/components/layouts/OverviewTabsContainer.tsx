@@ -13,6 +13,7 @@ export interface OverviewTab {
 interface OverviewTabsContainerProps {
   tabs: OverviewTab[];
   defaultTab?: string;
+  activeTab?: string;
   onTabChange?: (tabId: string) => void;
   className?: string;
 }
@@ -20,6 +21,7 @@ interface OverviewTabsContainerProps {
 export function OverviewTabsContainer({
   tabs,
   defaultTab,
+  activeTab,
   onTabChange,
   className = '',
 }: OverviewTabsContainerProps) {
@@ -27,7 +29,8 @@ export function OverviewTabsContainer({
 
   return (
     <Tabs
-      defaultValue={defaultTabId}
+      value={activeTab}
+      defaultValue={activeTab ? undefined : defaultTabId}
       onValueChange={(value) => onTabChange?.(value)}
       className={`w-full ${className}`}
     >

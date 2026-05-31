@@ -41,43 +41,43 @@ type NavItem = {
    ───────────────────────────────────────────── */
 const navByRole: Record<Role, NavItem[]> = {
   md: [
-    { to: "/dashboard/md#overview", label: "Overview", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/md#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
-    { to: "/dashboard/md#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
-    { to: "/dashboard/md#approvals", label: "Approvals", icon: CheckSquare, section: "governance" },
+    { to: "/dashboard/md/overview/dashboard", label: "Overview", icon: LayoutDashboard, section: "workspace" },
+    { to: "/dashboard/md/assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
+    { to: "/dashboard/md/complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
+    { to: "/dashboard/md/approvals", label: "Approvals", icon: CheckSquare, section: "governance" },
   ],
   admin: [
-    { to: "/dashboard/admin#overview", label: "Regional Data", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/admin#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
-    { to: "/dashboard/admin#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
-    { to: "/dashboard/admin#workspace", label: "Permissions & Roles", icon: ShieldCheck, section: "governance" },
-    { to: "/dashboard/admin#approvals", label: "Approvals", icon: CheckSquare, section: "governance" },
+    { to: "/dashboard/admin/overview/dashboard", label: "Regional Data", icon: LayoutDashboard, section: "workspace" },
+    { to: "/dashboard/admin/assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
+    { to: "/dashboard/admin/complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
+    { to: "/dashboard/admin/workspace", label: "Permissions & Roles", icon: ShieldCheck, section: "governance" },
+    { to: "/dashboard/admin/approvals", label: "Approvals", icon: CheckSquare, section: "governance" },
   ],
   regional_head: [
-    { to: "/dashboard/regional-head#overview", label: "Cluster Data", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/regional-head#assignments", label: "Assign Coordinators", icon: MapPinned, section: "operations" },
-    { to: "/dashboard/regional-head#attendance", label: "Attendance", icon: UserCheck, section: "operations" },
-    { to: "/dashboard/regional-head#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
-    { to: "/dashboard/regional-head#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
+    { to: "/dashboard/regional-head/overview/quick-insights", label: "Cluster Data", icon: LayoutDashboard, section: "workspace" },
+    { to: "/dashboard/regional-head/assignments", label: "Assign Coordinators", icon: MapPinned, section: "operations" },
+    { to: "/dashboard/regional-head/attendance", label: "Attendance", icon: UserCheck, section: "operations" },
+    { to: "/dashboard/regional-head/assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
+    { to: "/dashboard/regional-head/complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
   ],
   cluster_head: [
-    { to: "/dashboard/cluster-head#overview", label: "Coordinator Data", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/cluster-head#assignments", label: "Assign Field Offices", icon: MapPinned, section: "operations" },
-    { to: "/dashboard/cluster-head#attendance", label: "Attendance", icon: UserCheck, section: "operations" },
-    { to: "/dashboard/cluster-head#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
-    { to: "/dashboard/cluster-head#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
+    { to: "/dashboard/cluster-head/overview/quick-insights", label: "Coordinator Data", icon: LayoutDashboard, section: "workspace" },
+    { to: "/dashboard/cluster-head/assignments", label: "Assign Field Offices", icon: MapPinned, section: "operations" },
+    { to: "/dashboard/cluster-head/attendance", label: "Attendance", icon: UserCheck, section: "operations" },
+    { to: "/dashboard/cluster-head/assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
+    { to: "/dashboard/cluster-head/complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
   ],
   coordinator: [
-    { to: "/dashboard/coordinator#overview", label: "Total Summary", icon: LayoutDashboard, section: "workspace" },
-    { to: "/dashboard/coordinator#assignments", label: "Assign Locations", icon: MapPinned, section: "operations" },
-    { to: "/dashboard/coordinator#attendance", label: "Attendance", icon: UserCheck, section: "operations" },
-    { to: "/dashboard/coordinator#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
-    { to: "/dashboard/coordinator#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
+    { to: "/dashboard/coordinator/overview/quick-insights", label: "Total Summary", icon: LayoutDashboard, section: "workspace" },
+    { to: "/dashboard/coordinator/assignments", label: "Assign Locations", icon: MapPinned, section: "operations" },
+    { to: "/dashboard/coordinator/attendance", label: "Attendance", icon: UserCheck, section: "operations" },
+    { to: "/dashboard/coordinator/assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
+    { to: "/dashboard/coordinator/complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
   ],
   staff: [
-    { to: "/dashboard/staff#attendance", label: "Attendance", icon: UserCheck, section: "workspace" },
-    { to: "/dashboard/staff#assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
-    { to: "/dashboard/staff#complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
+    { to: "/dashboard/staff/attendance", label: "Attendance", icon: UserCheck, section: "workspace" },
+    { to: "/dashboard/staff/assigned-tasks", label: "Assigned Tasks", icon: ClipboardList, section: "operations" },
+    { to: "/dashboard/staff/complaints", label: "Complaints", icon: AlertTriangle, section: "operations" },
   ],
 };
 
@@ -167,6 +167,7 @@ const SideNavItem = ({
   expanded: boolean;
 }) => {
   const [path, hash] = item.to.split("#");
+  const overviewBase = path.includes("/overview/") ? path.slice(0, path.indexOf("/overview/") + "/overview".length) : null;
 
   return (
     <NavLink
@@ -174,7 +175,9 @@ const SideNavItem = ({
       end
       aria-label={item.label}
       className={({ isActive }) => {
-        const active = hash ? location.pathname === path && location.hash === `#${hash}` : isActive;
+        const active = hash
+          ? location.pathname === path && location.hash === `#${hash}`
+          : isActive || (overviewBase ? location.pathname.startsWith(overviewBase) : false);
         return cn(
           "group relative flex min-h-[42px] items-center rounded-xl transition-all duration-200",
           expanded ? "mx-3 gap-3 px-3.5 py-2.5" : "mx-auto h-11 w-11 justify-center",
@@ -185,7 +188,9 @@ const SideNavItem = ({
       }}
     >
       {({ isActive }) => {
-        const active = hash ? location.pathname === path && location.hash === `#${hash}` : isActive;
+        const active = hash
+          ? location.pathname === path && location.hash === `#${hash}`
+          : isActive || (overviewBase ? location.pathname.startsWith(overviewBase) : false);
         return (
           <>
             {/* Left Accent indicator bar */}
@@ -514,7 +519,7 @@ export const DashboardShell = ({
               <div className="flex shrink-0 items-center gap-3">
                 <button
                   aria-label="Notifications"
-                  onClick={() => nav(`${location.pathname}#notifications`)}
+                  onClick={() => nav(`${location.pathname.split("/").slice(0, 3).join("/")}/workspace/notifications`)}
                   className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
                 >
                   <Bell className="h-4.5 w-4.5" />
@@ -548,7 +553,12 @@ export const DashboardShell = ({
             >
               {items.map((it, i) => {
                 const [path, hash] = it.to.split("#");
-                const isActive = hash ? location.pathname === path && location.hash === `#${hash}` : location.pathname === path;
+                const overviewBase = path.includes("/overview/")
+                  ? path.slice(0, path.indexOf("/overview/") + "/overview".length)
+                  : null;
+                const isActive = hash
+                  ? location.pathname === path && location.hash === `#${hash}`
+                  : location.pathname === path || (overviewBase ? location.pathname.startsWith(overviewBase) : false);
                 return (
                   <NavLink
                     key={`${it.label}-mobile-${i}`}

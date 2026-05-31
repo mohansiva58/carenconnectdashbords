@@ -32,10 +32,12 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forbidden" element={<Forbidden />} />
             <Route path="/dashboard/super-admin" element={<Navigate to="/dashboard/md" replace />} />
-            <Route path="/dashboard/md" element={<Protected allow={["md"]}><DashboardErrorBoundary><SuperAdminDashboard /></DashboardErrorBoundary></Protected>} />
-            <Route path="/dashboard/admin" element={<Protected allow={["admin", "md"]}><DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary></Protected>} />
-            <Route path="/dashboard/coordinator" element={<Protected allow={["coordinator", "admin", "md"]}><DashboardErrorBoundary><CoordinatorDashboard /></DashboardErrorBoundary></Protected>} />
-            <Route path="/dashboard/staff" element={<Protected allow={["staff", "coordinator", "admin", "md"]}><DashboardErrorBoundary><StaffDashboard /></DashboardErrorBoundary></Protected>} />
+            <Route path="/dashboard/md/*" element={<Protected allow={["md"]}><DashboardErrorBoundary><SuperAdminDashboard /></DashboardErrorBoundary></Protected>} />
+            <Route path="/dashboard/admin/*" element={<Protected allow={["admin", "md"]}><DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary></Protected>} />
+            <Route path="/dashboard/regional-head/*" element={<Protected allow={["regional_head", "admin", "md"]}><DashboardErrorBoundary><CoordinatorDashboard role="regional_head" /></DashboardErrorBoundary></Protected>} />
+            <Route path="/dashboard/cluster-head/*" element={<Protected allow={["cluster_head", "regional_head", "admin", "md"]}><DashboardErrorBoundary><CoordinatorDashboard role="cluster_head" /></DashboardErrorBoundary></Protected>} />
+            <Route path="/dashboard/coordinator/*" element={<Protected allow={["coordinator", "admin", "md"]}><DashboardErrorBoundary><CoordinatorDashboard /></DashboardErrorBoundary></Protected>} />
+            <Route path="/dashboard/staff/*" element={<Protected allow={["staff", "coordinator", "admin", "md"]}><DashboardErrorBoundary><StaffDashboard /></DashboardErrorBoundary></Protected>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

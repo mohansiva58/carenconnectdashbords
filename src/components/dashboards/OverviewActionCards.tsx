@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 type Tone = "cyan" | "purple" | "rose" | "amber";
 
@@ -40,9 +41,9 @@ export const OverviewActionCards = ({ actions }: { actions: OverviewAction[] }) 
       const classes = toneClasses[tone];
 
       return (
-        <a
+        <Link
           key={label}
-          href={href}
+          to={href}
           className={`group flex min-h-28 items-center justify-between rounded-2xl border p-4 text-left shadow-sm transition-colors ${classes.card}`}
         >
           <div className="min-w-0">
@@ -53,7 +54,7 @@ export const OverviewActionCards = ({ actions }: { actions: OverviewAction[] }) 
           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${classes.icon}`}>
             <Icon className="h-5 w-5" />
           </div>
-        </a>
+        </Link>
       );
     })}
   </div>

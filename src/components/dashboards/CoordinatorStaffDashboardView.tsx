@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { KpiCard } from "@/components/KpiCard";
 import { TrendChart, AttendanceTrendChart } from "@/components/Charts";
@@ -23,17 +22,20 @@ import { Activity, Users, AlertTriangle, CheckSquare, MapPinned, UserCheck, Clip
 export const CoordinatorStaffDashboardView = ({
   role,
   activeTab,
+  activeOverviewTab,
+  onOverviewTabChange,
   dashboardData,
   user,
   refresh,
 }: {
   role: string;
   activeTab: string;
+  activeOverviewTab: string;
+  onOverviewTabChange: (tabId: string) => void;
   dashboardData: any;
   user: any;
   refresh: (force: boolean) => void;
 }) => {
-  const [activeOverviewTab, setActiveOverviewTab] = useState('quick-insights');
   const staffFilters = useFilters();
   const analyticsFilters = useFilters();
   
@@ -198,8 +200,9 @@ export const CoordinatorStaffDashboardView = ({
                 ),
               },
             ]}
+            activeTab={activeOverviewTab}
             defaultTab={activeOverviewTab}
-            onTabChange={setActiveOverviewTab}
+            onTabChange={onOverviewTabChange}
           />
         )}
 

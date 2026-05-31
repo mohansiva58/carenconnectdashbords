@@ -7,7 +7,7 @@ import { AdminDashboardView } from "./dashboards/AdminDashboardView";
 import { CoordinatorStaffDashboardView } from "./dashboards/CoordinatorStaffDashboardView";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Tabs } from "@/components/ui/tabs";
 import type { Role } from "@/lib/roles";
 
@@ -19,6 +19,28 @@ const titleByRole: Record<Role, string> = {
   cluster_head: "Cluster Management",
   staff: "My Tasks",
 };
+
+const dashboardPathByRole: Record<Role, string> = {
+  md: "/dashboard/md",
+  admin: "/dashboard/admin",
+  coordinator: "/dashboard/coordinator",
+  regional_head: "/dashboard/regional-head",
+  cluster_head: "/dashboard/cluster-head",
+  staff: "/dashboard/staff",
+};
+
+const allowedTabs = [
+  "overview",
+  "assignments",
+  "customers",
+  "attendance",
+  "daily",
+  "remarks",
+  "complaints",
+  "approvals",
+  "workspace",
+  "assigned-tasks",
+];
 
 const LoadingSkeleton = () => (
   <div className="space-y-6 animate-pulse">
@@ -38,13 +60,34 @@ const LoadingSkeleton = () => (
 export const RoleDashboard = ({ role }: { role: Role }) => {
   const { user, token, approveLead, rejectLead } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<DashboardViewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [activeOverviewTab, setActiveOverviewTab] = useState(role === "md" || role === "admin" ? "dashboard" : "quick-insights");
+  const [activePeopleRoleTab, setActivePeopleRoleTab] = useState("all");
   const [workspaceTab, setWorkspaceTab] = useState<"tasks" | "approvals" | "notifications" | "activity">("tasks");
 
   const userId = useMemo(() => Number.parseInt(String(user?.id ?? ""), 10), [user?.id]);
+  const dashboardBasePath = dashboardPathByRole[role];
+
+  const goToDashboardTab = (tabId: string) => {
+    setActiveTab(tabId);
+    navigate(`${dashboardBasePath}/${tabId}`);
+  };
+
+  const goToOverviewTab = (tabId: string) => {
+    setActiveOverviewTab(tabId);
+    const rolePath = tabId === "people" ? `/${activePeopleRoleTab}` : "";
+    navigate(`${dashboardBasePath}/overview/${tabId}${rolePath}`);
+  };
+
+  const goToPeopleRoleTab = (tabId: string) => {
+    setActivePeopleRoleTab(tabId);
+    setActiveOverviewTab("people");
+    navigate(`${dashboardBasePath}/overview/people/${tabId}`);
+  };
 
   // ── Handlers (untouched logic) ───────────────────────────────────────────
   const handleApproveLead = async (id: string) => {
@@ -137,32 +180,48 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
   }, [role, token, user, userId]);
 
   useEffect(() => {
+    const baseParts = dashboardBasePath.split("/").filter(Boolean);
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const routeParts = pathParts.slice(baseParts.length);
+    const routeTab = routeParts[0]?.toLowerCase();
+    const routeOverviewTab = routeParts[1]?.toLowerCase();
+    const routePeopleRoleTab = routeParts[2]?.toLowerCase();
     const hash = location.hash.toLowerCase().replace("#", "");
-    if (!hash) {
-      setActiveTab("overview");
+
+    if (routeTab && allowedTabs.includes(routeTab)) {
+      setActiveTab(routeTab);
+      if (routeTab === "overview") {
+        const fallbackOverviewTab = role === "md" || role === "admin" ? "dashboard" : "quick-insights";
+        setActiveOverviewTab(routeOverviewTab || fallbackOverviewTab);
+        if (routeOverviewTab === "people" && routePeopleRoleTab) {
+          setActivePeopleRoleTab(routePeopleRoleTab);
+        }
+      }
+      if (routeTab === "workspace" && routeOverviewTab) {
+        setWorkspaceTab(routeOverviewTab as typeof workspaceTab);
+      }
       return;
     }
 
-    const allowedTabs = [
-      "overview",
-      "assignments",
-      "customers",
-      "attendance",
-      "daily",
-      "remarks",
-      "complaints",
-      "approvals",
-      "workspace",
-      "assigned-tasks",
-    ];
+    if (!hash) {
+      const defaultPath =
+        role === "staff"
+          ? `${dashboardBasePath}/attendance`
+          : `${dashboardBasePath}/overview/${role === "md" || role === "admin" ? "dashboard" : "quick-insights"}`;
+      setActiveTab(role === "staff" ? "attendance" : "overview");
+      navigate(defaultPath, { replace: true });
+      return;
+    }
 
     if (allowedTabs.includes(hash)) {
       setActiveTab(hash);
+      navigate(`${dashboardBasePath}/${hash}`, { replace: true });
     } else if (hash === "notifications") {
       setActiveTab("workspace");
       setWorkspaceTab("notifications");
+      navigate(`${dashboardBasePath}/workspace/notifications`, { replace: true });
     }
-  }, [location.hash]);
+  }, [dashboardBasePath, location.hash, location.pathname, navigate, role, workspaceTab]);
 
   // ── Guard states ──────────────────────────────────────────────────────────
   if (isLoading) {
@@ -195,7 +254,7 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
 
   return (
     <DashboardShell title={titleByRole[role]}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative min-w-0">
+      <Tabs value={activeTab} onValueChange={goToDashboardTab} className="relative min-w-0">
         {/* Floating Utility Controls (Refresh Trigger) */}
         <div className="mb-3 flex w-full justify-end lg:fixed lg:right-6 lg:top-24 lg:z-30 lg:mb-0 lg:w-auto">
           <button
@@ -211,6 +270,11 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
         {role === "md" && (
           <MDDashboardView
             activeTab={activeTab}
+            activeOverviewTab={activeOverviewTab}
+            activePeopleRoleTab={activePeopleRoleTab}
+            onOverviewTabChange={goToOverviewTab}
+            onPeopleRoleTabChange={goToPeopleRoleTab}
+            dashboardBasePath={dashboardBasePath}
             workspaceTab={workspaceTab}
             dashboardData={dashboardData}
             user={user}
@@ -223,6 +287,11 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
         {role === "admin" && (
           <AdminDashboardView
             activeTab={activeTab}
+            activeOverviewTab={activeOverviewTab}
+            activePeopleRoleTab={activePeopleRoleTab}
+            onOverviewTabChange={goToOverviewTab}
+            onPeopleRoleTabChange={goToPeopleRoleTab}
+            dashboardBasePath={dashboardBasePath}
             workspaceTab={workspaceTab}
             dashboardData={dashboardData}
             user={user}
@@ -236,6 +305,8 @@ export const RoleDashboard = ({ role }: { role: Role }) => {
           <CoordinatorStaffDashboardView
             role={role}
             activeTab={activeTab}
+            activeOverviewTab={activeOverviewTab}
+            onOverviewTabChange={goToOverviewTab}
             dashboardData={dashboardData}
             user={user}
             refresh={refresh}
